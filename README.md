@@ -1,24 +1,24 @@
-# Obsidian MCP Pro (plugin)
+# MCP Pro
 
-An Obsidian community plugin that runs an **MCP server** inside Obsidian. One click, your vault is available to Claude Desktop, Cursor, ChatGPT, or any MCP-compatible client — over HTTP, no config-file editing.
+A community plugin that runs an **MCP server** inside your vault. One click, and your notes are available to Claude Desktop, Cursor, ChatGPT, or any MCP-compatible client — over HTTP, no config-file editing.
 
-Wraps the [`obsidian-mcp-pro`](https://github.com/rps321321/obsidian-mcp-pro) server.
+Wraps the [`obsidian-mcp-pro`](https://github.com/rps321321/obsidian-mcp-pro) library.
 
 ## Features
 
 - One-click start/stop from the ribbon or command palette
 - Status bar indicator showing port and state
-- Auto-start on Obsidian launch (optional)
+- Auto-start on app launch (optional)
 - Bearer-token authentication for remote use
 - Copy-to-clipboard connection snippet for client configs
-- Uses Obsidian's bundled Node runtime — no separate Node install required
+- Everything bundled — no separate Node install required
 
 ## Install
 
 ### From a GitHub release (recommended)
 
 1. Grab `main.js` and `manifest.json` from the [latest release](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/latest).
-2. Drop them into `<your-vault>/.obsidian/plugins/obsidian-mcp-pro/`.
+2. Drop them into `<your-vault>/.obsidian/plugins/mcp-pro/`.
 3. Enable the plugin in **Settings → Community plugins**.
 
 That's it — everything is bundled into `main.js`, no `node_modules` required.
