@@ -19,11 +19,11 @@ export default class McpProPlugin extends Plugin {
 
     this.addSettingTab(new McpSettingsTab(this.app, this, this.manager));
 
-    this.addRibbonIcon("server", "Toggle MCP Pro server", async () => {
+    this.addRibbonIcon("server", "Toggle MCP server", () => {
       if (this.manager.isRunning()) {
-        await this.manager.stop();
+        void this.manager.stop();
       } else {
-        await this.manager.start();
+        void this.manager.start();
       }
     });
 
@@ -31,36 +31,36 @@ export default class McpProPlugin extends Plugin {
     this.manager.subscribe((s) => {
       if (!this.statusBarEl) return;
       if (s.status === "running" && s.port) {
-        this.statusBarEl.setText(`MCP :${s.port}`);
+        this.statusBarEl.setText(`mcp :${s.port}`);
       } else if (s.status === "starting") {
-        this.statusBarEl.setText("MCP …");
+        this.statusBarEl.setText("mcp starting…");
       } else if (s.status === "error") {
-        this.statusBarEl.setText("MCP !");
+        this.statusBarEl.setText("mcp error");
       } else {
-        this.statusBarEl.setText("MCP off");
+        this.statusBarEl.setText("mcp off");
       }
     });
 
     this.addCommand({
       id: "start-server",
-      name: "Start MCP server",
-      callback: () => this.manager.start(),
+      name: "Start server",
+      callback: () => { void this.manager.start(); },
     });
     this.addCommand({
       id: "stop-server",
-      name: "Stop MCP server",
-      callback: () => this.manager.stop(),
+      name: "Stop server",
+      callback: () => { void this.manager.stop(); },
     });
 
     if (this.settings.autoStart) {
       // Defer until workspace ready; spawning a child during onload can
       // delay startup noticeably on slower machines.
-      this.app.workspace.onLayoutReady(() => this.manager.start());
+      this.app.workspace.onLayoutReady(() => { void this.manager.start(); });
     }
   }
 
-  async onunload(): Promise<void> {
-    await this.manager?.stop();
+  onunload(): void {
+    void this.manager?.stop();
   }
 
   private resolveVaultPath(): string {

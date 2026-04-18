@@ -15,7 +15,7 @@ export interface ServerState {
 type Listener = (state: ServerState) => void;
 
 /**
- * Runs the MCP HTTP server in-process (inside Obsidian's renderer Node).
+ * Runs the MCP HTTP server in-process (inside the app's renderer Node).
  * No child process, no node_modules requirement at install time — the
  * whole server is bundled into the plugin's `main.js` by esbuild.
  */

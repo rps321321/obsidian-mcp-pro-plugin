@@ -1,7 +1,7 @@
 {
   "id": "mcp-pro",
   "name": "MCP Pro",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "minAppVersion": "1.4.0",
   "description": "Expose your vault to Claude, Cursor, ChatGPT, and any MCP-compatible client over HTTP — no config-file editing.",
   "author": "rps321",

@@ -41,11 +41,6 @@ export class McpSettingsTab extends PluginSettingTab {
     const { containerEl, plugin, manager } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Obsidian MCP Pro" });
-    containerEl.createEl("p", {
-      text: "Run an MCP server inside Obsidian. Connect Claude Desktop, Cursor, ChatGPT, or any MCP-compatible client over HTTP.",
-    });
-
     const status = containerEl.createDiv({ cls: "mcp-status" });
     const renderStatus = (): void => {
       const s = manager.getState();
@@ -54,18 +49,17 @@ export class McpSettingsTab extends PluginSettingTab {
       label.setText(`Status: ${s.status}`);
       if (s.status === "running" && s.port) {
         const url = `http://${plugin.settings.host}:${s.port}/mcp`;
-        const link = status.createEl("code", { text: `  ${url}` });
-        link.style.marginLeft = "0.5rem";
+        status.createEl("code", { text: url, cls: "mcp-status-url" });
       }
       if (s.lastError) {
-        status.createEl("div", { text: s.lastError, cls: "mod-warning" });
+        status.createEl("div", { text: s.lastError, cls: "mod-warning mcp-status-error" });
       }
     };
     manager.subscribe(renderStatus);
 
     new Setting(containerEl)
       .setName("Server control")
-      .setDesc("Start or stop the MCP server.")
+      .setDesc("Start or stop the server.")
       .addButton((btn: ButtonComponent) =>
         btn.setButtonText("Start").onClick(() => manager.start()),
       )
@@ -74,7 +68,7 @@ export class McpSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Auto-start on Obsidian launch")
+      .setName("Auto-start on launch")
       .addToggle((t) =>
         t.setValue(plugin.settings.autoStart).onChange(async (v) => {
           plugin.settings.autoStart = v;
@@ -97,7 +91,7 @@ export class McpSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Port")
-      .setDesc("HTTP port for the MCP server.")
+      .setDesc("HTTP port to listen on.")
       .addText((t) =>
         t
           .setPlaceholder("3333")
@@ -112,9 +106,9 @@ export class McpSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Bearer token (optional)")
+      .setName("Bearer token")
       .setDesc(
-        "If set, clients must send Authorization: Bearer <token>. Leave empty for local-only use.",
+        "Optional. If set, clients must send Authorization: Bearer <token>.",
       )
       .addText((t) =>
         t
@@ -127,8 +121,8 @@ export class McpSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Copy connection snippet")
-      .setDesc("Paste this into a client's MCP server config.")
+      .setName("Connection snippet")
+      .setDesc("Paste this into a client's config.")
       .addButton((btn) =>
         btn.setButtonText("Copy JSON").onClick(async () => {
           const snippet = {
