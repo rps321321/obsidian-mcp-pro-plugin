@@ -33,11 +33,11 @@ export default class McpProPlugin extends Plugin {
       if (s.status === "running" && s.port) {
         this.statusBarEl.setText(`mcp :${s.port}`);
       } else if (s.status === "starting") {
-        this.statusBarEl.setText("mcp starting…");
+        this.statusBarEl.setText("MCP starting…");
       } else if (s.status === "error") {
-        this.statusBarEl.setText("mcp error");
+        this.statusBarEl.setText("MCP error");
       } else {
-        this.statusBarEl.setText("mcp off");
+        this.statusBarEl.setText("MCP off");
       }
     });
 
