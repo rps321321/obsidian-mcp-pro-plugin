@@ -26,19 +26,19 @@ const ctx = await esbuild.context({
     "@lezer/common",
     "@lezer/highlight",
     "@lezer/lr",
-    // Never bundle obsidian-mcp-pro — it's spawned as a child process, not
-    // imported. Keeping it external avoids dragging its whole dep graph
-    // (including MCP SDK) into the plugin bundle.
-    "obsidian-mcp-pro",
     ...builtins,
   ],
   format: "cjs",
+  platform: "node",
   target: "es2022",
   logLevel: "info",
   sourcemap: production ? false : "inline",
   treeShaking: true,
   outfile: "main.js",
   minify: production,
+  // obsidian-mcp-pro + @modelcontextprotocol/sdk + zod + gray-matter are all
+  // bundled into main.js so the plugin is fully self-contained — no
+  // node_modules needed at install time.
 });
 
 if (production) {

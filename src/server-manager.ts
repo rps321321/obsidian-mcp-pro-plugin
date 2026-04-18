@@ -1,33 +1,32 @@
-import { spawn, type ChildProcess } from "child_process";
 import { Notice } from "obsidian";
+import type { HttpServerHandle } from "obsidian-mcp-pro";
+import { buildMcpServer, startHttpServer } from "obsidian-mcp-pro";
 import type { Settings } from "./settings";
 
 export type ServerStatus = "stopped" | "starting" | "running" | "error";
 
 export interface ServerState {
   status: ServerStatus;
-  pid?: number;
   port?: number;
+  url?: string;
   lastError?: string;
 }
 
 type Listener = (state: ServerState) => void;
 
 /**
- * Spawns the `obsidian-mcp-pro` CLI as a child process in HTTP-transport
- * mode. Uses Electron-as-node (`ELECTRON_RUN_AS_NODE=1`) so the user
- * doesn't need a system-wide Node install — every Obsidian desktop build
- * ships Electron, which can run our entrypoint as plain Node.
+ * Runs the MCP HTTP server in-process (inside Obsidian's renderer Node).
+ * No child process, no node_modules requirement at install time — the
+ * whole server is bundled into the plugin's `main.js` by esbuild.
  */
 export class ServerManager {
-  private child: ChildProcess | null = null;
+  private handle: HttpServerHandle | null = null;
   private state: ServerState = { status: "stopped" };
   private listeners: Set<Listener> = new Set();
 
   constructor(
     private vaultPath: string,
     private getSettings: () => Settings,
-    private resolveEntryPath: () => string,
   ) {}
 
   subscribe(fn: Listener): () => void {
@@ -47,99 +46,44 @@ export class ServerManager {
   async start(): Promise<void> {
     if (this.isRunning()) return;
     const settings = this.getSettings();
-    const entry = this.resolveEntryPath();
     this.setState({ status: "starting", port: settings.port });
 
-    const args = [
-      entry,
-      "--transport=http",
-      `--host=${settings.host}`,
-      `--port=${settings.port}`,
-    ];
-    if (settings.bearerToken) {
-      args.push(`--token=${settings.bearerToken}`);
+    if (settings.vaultName) {
+      process.env.OBSIDIAN_VAULT_NAME = settings.vaultName;
     }
-
-    const env: NodeJS.ProcessEnv = {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: "1",
-      OBSIDIAN_VAULT_PATH: this.vaultPath,
-    };
-    if (settings.vaultName) env.OBSIDIAN_VAULT_NAME = settings.vaultName;
+    process.env.OBSIDIAN_VAULT_PATH = this.vaultPath;
 
     try {
-      this.child = spawn(process.execPath, args, {
-        env,
-        stdio: ["ignore", "pipe", "pipe"],
-        windowsHide: true,
+      const server = buildMcpServer(this.vaultPath);
+      const handle = await startHttpServer({
+        host: settings.host,
+        port: settings.port,
+        bearerToken: settings.bearerToken || undefined,
+        buildMcpServer: () => server,
+        installSignalHandlers: false,
+      });
+      this.handle = handle;
+      this.setState({
+        status: "running",
+        port: handle.port,
+        url: handle.url,
       });
     } catch (err) {
       this.fail(err instanceof Error ? err.message : String(err));
-      return;
     }
-
-    const child = this.child;
-    if (!child) return;
-
-    // The server prints "HTTP server listening on …" to stderr once it's
-    // bound and ready. Wait for that before flipping to "running" so the
-    // status badge is accurate.
-    let ready = false;
-    const onData = (chunk: Buffer): void => {
-      const text = chunk.toString("utf-8");
-      console.log("[obsidian-mcp-pro]", text.trimEnd());
-      if (!ready && text.includes("HTTP server listening")) {
-        ready = true;
-        this.setState({
-          status: "running",
-          pid: child.pid,
-          port: settings.port,
-        });
-      }
-    };
-    child.stdout?.on("data", onData);
-    child.stderr?.on("data", onData);
-
-    child.on("error", (err) => {
-      this.fail(err.message);
-    });
-
-    child.on("exit", (code, signal) => {
-      this.child = null;
-      if (this.state.status === "starting") {
-        this.fail(`Server exited before ready (code=${code}, signal=${signal})`);
-      } else if (this.state.status === "running") {
-        this.setState({ status: "stopped" });
-      }
-    });
-
-    // Give it a generous timeout to bind.
-    setTimeout(() => {
-      if (!ready && this.child) {
-        this.fail("Server did not become ready within 10 seconds");
-        this.stop();
-      }
-    }, 10_000);
   }
 
   async stop(): Promise<void> {
-    if (!this.child) {
-      this.setState({ status: "stopped" });
-      return;
-    }
-    const child = this.child;
-    try {
-      if (process.platform === "win32") {
-        child.kill();
-      } else {
-        child.kill("SIGTERM");
-        setTimeout(() => {
-          if (this.child === child) child.kill("SIGKILL");
-        }, 3_000);
+    const handle = this.handle;
+    this.handle = null;
+    if (handle) {
+      try {
+        await handle.stop();
+      } catch (err) {
+        console.error("[obsidian-mcp-pro] stop error:", err);
       }
-    } catch (err) {
-      console.error("[obsidian-mcp-pro] stop error:", err);
     }
+    this.setState({ status: "stopped" });
   }
 
   private fail(msg: string): void {

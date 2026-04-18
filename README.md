@@ -15,7 +15,15 @@ Wraps the [`obsidian-mcp-pro`](https://github.com/rps321321/obsidian-mcp-pro) se
 
 ## Install
 
-### From source (until the plugin is in the community directory)
+### From a GitHub release (recommended)
+
+1. Grab `main.js` and `manifest.json` from the [latest release](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/latest).
+2. Drop them into `<your-vault>/.obsidian/plugins/obsidian-mcp-pro/`.
+3. Enable the plugin in **Settings → Community plugins**.
+
+That's it — everything is bundled into `main.js`, no `node_modules` required.
+
+### From source
 
 ```bash
 git clone https://github.com/rps321321/obsidian-mcp-pro-plugin.git
@@ -24,15 +32,7 @@ npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json`, and `styles.css` (if any) into your vault:
-
-```
-<vault>/.obsidian/plugins/obsidian-mcp-pro/
-```
-
-You also need `node_modules/obsidian-mcp-pro/` copied next to them — the plugin spawns the installed CLI as a child process.
-
-Enable the plugin in **Settings → Community plugins**.
+Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
 
 ## Usage
 
@@ -54,9 +54,7 @@ Enable the plugin in **Settings → Community plugins**.
 
 ## Architecture
 
-The plugin spawns `obsidian-mcp-pro --transport=http` as a child process using Electron's bundled Node (`ELECTRON_RUN_AS_NODE=1` + `process.execPath`). The child listens on the configured port with DNS rebinding protection, bearer auth (optional), and per-session state.
-
-When the plugin unloads, the child receives SIGTERM (or `kill()` on Windows), followed by SIGKILL after 3s if still alive.
+`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild. On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS rebinding protection, optional bearer auth, and per-session state, and is cleanly stopped on plugin unload.
 
 ## Development
 

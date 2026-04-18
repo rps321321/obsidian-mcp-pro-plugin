@@ -1,6 +1,4 @@
-import { Plugin, Notice } from "obsidian";
-import * as path from "path";
-import { createRequire } from "module";
+import { Plugin } from "obsidian";
 import {
   DEFAULT_SETTINGS,
   McpSettingsTab,
@@ -17,11 +15,7 @@ export default class McpProPlugin extends Plugin {
     await this.loadSettings();
 
     const vaultPath = this.resolveVaultPath();
-    this.manager = new ServerManager(
-      vaultPath,
-      () => this.settings,
-      () => this.resolveEntryPath(),
-    );
+    this.manager = new ServerManager(vaultPath, () => this.settings);
 
     this.addSettingTab(new McpSettingsTab(this.app, this, this.manager));
 
@@ -74,27 +68,6 @@ export default class McpProPlugin extends Plugin {
     if (typeof adapter.getBasePath === "function") return adapter.getBasePath();
     if (typeof adapter.basePath === "string") return adapter.basePath;
     throw new Error("Unable to determine vault filesystem path (desktop-only plugin).");
-  }
-
-  private resolveEntryPath(): string {
-    // Plugin is a CommonJS bundle, but esbuild's external import of
-    // `obsidian-mcp-pro` means we can't `require` it directly from a bundled
-    // module reliably. Resolve via createRequire from the plugin's own dir.
-    try {
-      const req = createRequire(path.join(this.getPluginDir(), "main.js"));
-      return req.resolve("obsidian-mcp-pro/build/index.js");
-    } catch (err) {
-      new Notice(
-        "MCP Pro: cannot find obsidian-mcp-pro. Run `npm install` in the plugin directory.",
-        8_000,
-      );
-      throw err;
-    }
-  }
-
-  private getPluginDir(): string {
-    const vaultPath = this.resolveVaultPath();
-    return path.join(vaultPath, this.app.vault.configDir, "plugins", this.manifest.id);
   }
 
   async loadSettings(): Promise<void> {
