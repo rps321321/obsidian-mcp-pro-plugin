@@ -19,7 +19,7 @@ export default class McpProPlugin extends Plugin {
 
     this.addSettingTab(new McpSettingsTab(this.app, this, this.manager));
 
-    this.addRibbonIcon("server", "Toggle MCP server", () => {
+    this.addRibbonIcon("server", "Toggle server", () => {
       if (this.manager.isRunning()) {
         void this.manager.stop();
       } else {
@@ -31,13 +31,13 @@ export default class McpProPlugin extends Plugin {
     this.manager.subscribe((s) => {
       if (!this.statusBarEl) return;
       if (s.status === "running" && s.port) {
-        this.statusBarEl.setText(`mcp :${s.port}`);
+        this.statusBarEl.setText(`Server :${s.port}`);
       } else if (s.status === "starting") {
-        this.statusBarEl.setText("MCP starting…");
+        this.statusBarEl.setText("Server starting…");
       } else if (s.status === "error") {
-        this.statusBarEl.setText("MCP error");
+        this.statusBarEl.setText("Server error");
       } else {
-        this.statusBarEl.setText("MCP off");
+        this.statusBarEl.setText("Server off");
       }
     });
 
