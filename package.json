@@ -27,6 +27,6 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {
-    "obsidian-mcp-pro": "^1.3.0"
+    "obsidian-mcp-pro": "^1.4.0"
   }
 }

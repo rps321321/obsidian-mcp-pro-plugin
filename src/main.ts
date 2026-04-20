@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { FileSystemAdapter, Plugin } from "obsidian";
 import {
   DEFAULT_SETTINGS,
   McpSettingsTab,
@@ -7,9 +7,10 @@ import {
 import { ServerManager } from "./server-manager";
 
 export default class McpProPlugin extends Plugin {
-  settings: Settings = DEFAULT_SETTINGS;
+  settings: Settings = { ...DEFAULT_SETTINGS };
   private manager!: ServerManager;
   private statusBarEl: HTMLElement | null = null;
+  private unsubscribeStatusBar: (() => void) | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -28,7 +29,7 @@ export default class McpProPlugin extends Plugin {
     });
 
     this.statusBarEl = this.addStatusBarItem();
-    this.manager.subscribe((s) => {
+    this.unsubscribeStatusBar = this.manager.subscribe((s) => {
       if (!this.statusBarEl) return;
       if (s.status === "running" && s.port) {
         this.statusBarEl.setText(`Server :${s.port}`);
@@ -59,14 +60,15 @@ export default class McpProPlugin extends Plugin {
     }
   }
 
-  onunload(): void {
-    void this.manager?.stop();
+  async onunload(): Promise<void> {
+    this.unsubscribeStatusBar?.();
+    this.unsubscribeStatusBar = null;
+    await this.manager?.stop();
   }
 
   private resolveVaultPath(): string {
-    const adapter = this.app.vault.adapter as unknown as { basePath?: string; getBasePath?: () => string };
-    if (typeof adapter.getBasePath === "function") return adapter.getBasePath();
-    if (typeof adapter.basePath === "string") return adapter.basePath;
+    const adapter = this.app.vault.adapter;
+    if (adapter instanceof FileSystemAdapter) return adapter.getBasePath();
     throw new Error("Unable to determine vault filesystem path (desktop-only plugin).");
   }
 

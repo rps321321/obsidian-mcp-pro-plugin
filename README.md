@@ -52,9 +52,17 @@ Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
 
 4. Paste into your client (Cursor's `~/.cursor/mcp.json`, Claude Desktop's `claude_desktop_config.json`, etc.).
 
+## Security
+
+- **Default bind is loopback** (`127.0.0.1`). The settings tab shows an inline warning the moment you type any other host — binding to `0.0.0.0` or a LAN interface exposes your vault to every device on the network.
+- **Bearer token optional but strongly recommended** if the port is reachable from anywhere other than this machine. The token field is masked, stored in the plugin's data JSON, and compared in constant time on the server side.
+- **DNS rebinding protection** is enabled on the HTTP transport — requests with a mismatched `Host` header are rejected.
+- **Vault boundary** — every path the server resolves is realpath-checked against the vault root, so symlinks inside the vault cannot leak data outside it.
+- When you copy the connection snippet, the clipboard contents include your bearer token verbatim. The plugin shows a longer-duration notice when that's the case — don't paste the snippet into shared documents or version control.
+
 ## Architecture
 
-`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild. On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS rebinding protection, optional bearer auth, and per-session state, and is cleanly stopped on plugin unload.
+`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild (currently v1.4.0). On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS rebinding protection, optional bearer auth, per-session state, and a 1 h idle-session sweeper, and is cleanly stopped on plugin unload.
 
 ## Development
 
