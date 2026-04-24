@@ -103,7 +103,7 @@ export class ServerManager {
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error("[obsidian-mcp-pro] stop error:", err);
-          new Notice(`MCP Pro: stop failed — ${msg}`, 6_000);
+          new Notice(`Stop failed — ${msg}`, 6_000);
         }
       }
       this.clearEnv();
@@ -118,7 +118,7 @@ export class ServerManager {
 
   private fail(msg: string): void {
     console.error("[obsidian-mcp-pro]", msg);
-    new Notice(`MCP Pro: ${msg}`, 6_000);
+    new Notice(msg, 6_000);
     this.setState({ status: "error", lastError: msg });
   }
 

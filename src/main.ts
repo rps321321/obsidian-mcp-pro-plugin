@@ -60,10 +60,10 @@ export default class McpProPlugin extends Plugin {
     }
   }
 
-  async onunload(): Promise<void> {
+  onunload(): void {
     this.unsubscribeStatusBar?.();
     this.unsubscribeStatusBar = null;
-    await this.manager?.stop();
+    void this.manager?.stop();
   }
 
   private resolveVaultPath(): string {
