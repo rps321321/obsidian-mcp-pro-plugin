@@ -74,6 +74,10 @@ export default class McpProPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    if (!this.settings.bearerToken) {
+      this.settings.bearerToken = crypto.randomUUID();
+      await this.saveSettings();
+    }
   }
 
   async saveSettings(): Promise<void> {

@@ -3,6 +3,7 @@ import {
   Notice,
   PluginSettingTab,
   Setting,
+  TextComponent,
   type ButtonComponent,
   type Plugin,
 } from "obsidian";
@@ -142,15 +143,42 @@ export class McpSettingsTab extends PluginSettingTab {
         });
       });
 
+    let tokenInputRef: TextComponent;
+
     new Setting(containerEl)
       .setName("Bearer token")
       .setDesc(
-        "Optional. If set, clients must send Authorization: Bearer <token>.",
+        "Required for HTTP transport. Auto-generated on first load. Copy to your MCP client config.",
+      )
+      .addExtraButton((btn) => {
+        btn
+          .setIcon("eye")
+          .setTooltip("Show / hide token")
+          .onClick(() => {
+            tokenInputRef.inputEl.type =
+              tokenInputRef.inputEl.type === "password" ? "text" : "password";
+          });
+      })
+      .addButton((btn) =>
+        btn
+          .setButtonText("Regenerate")
+          .setWarning()
+          .onClick(async () => {
+            plugin.settings.bearerToken = crypto.randomUUID();
+            await plugin.saveSettings();
+            tokenInputRef.setValue(plugin.settings.bearerToken);
+            tokenInputRef.inputEl.type = "text";
+            new Notice(
+              "New token generated — copy it now and update your MCP client config before restarting the server.",
+              12_000,
+            );
+          }),
       )
       .addText((t) => {
+        tokenInputRef = t;
         t.inputEl.type = "password";
         t
-          .setPlaceholder("(empty)")
+          .setPlaceholder("auto-generated")
           .setValue(plugin.settings.bearerToken)
           .onChange(async (v) => {
             plugin.settings.bearerToken = v.trim();

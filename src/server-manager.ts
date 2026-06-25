@@ -75,7 +75,7 @@ export class ServerManager {
         const handle = await startHttpServer({
           host: settings.host,
           port: settings.port,
-          bearerToken: settings.bearerToken || undefined,
+          bearerToken: settings.bearerToken || "",
           buildMcpServer: () => server,
           installSignalHandlers: false,
         });
