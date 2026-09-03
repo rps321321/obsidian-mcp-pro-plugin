@@ -71,12 +71,15 @@ export class ServerManager {
       process.env.OBSIDIAN_VAULT_PATH = this.vaultPath;
 
       try {
-        const server = buildMcpServer(this.vaultPath);
         const handle = await startHttpServer({
           host: settings.host,
           port: settings.port,
           bearerToken: settings.bearerToken || undefined,
-          buildMcpServer: () => server,
+          // Streamable HTTP keeps one transport attached to each McpServer.
+          // Returning the same server instance for a second session causes the
+          // SDK to reject the second connect. Build a fresh server for every
+          // session instead; vault configuration remains process-scoped.
+          buildMcpServer: () => buildMcpServer(this.vaultPath),
           installSignalHandlers: false,
         });
         this.handle = handle;
