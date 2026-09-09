@@ -6,12 +6,14 @@ import {
   type ButtonComponent,
   type Plugin,
 } from "obsidian";
+import { detectMachineHosts, isValidHostEntry } from "./hosts";
 import type { ServerManager } from "./server-manager";
 
 const HOST_RE = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i;
 
 export interface Settings {
   host: string;
+  allowedHosts: string[];
   port: number;
   bearerToken: string;
   vaultName: string;
@@ -20,6 +22,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   host: "127.0.0.1",
+  allowedHosts: [],
   port: 3333,
   bearerToken: "",
   vaultName: "",
@@ -67,7 +70,7 @@ export class McpSettingsTab extends PluginSettingTab {
       }
       if (s.status === "running") {
         status.createEl("div", {
-          text: "Note: host/port/token changes require a restart.",
+          text: "Note: host, allowed hosts, port, and token changes require stopping and starting the server.",
           cls: "mcp-status-hint setting-item-description",
         });
       }
@@ -125,6 +128,64 @@ export class McpSettingsTab extends PluginSettingTab {
       });
     containerEl.appendChild(hostWarning);
 
+    containerEl.createDiv({
+      cls: "setting-item-description",
+      text:
+        "Always allowed: localhost, 127.0.0.1, [::1], and the bind address, each with the server's listening port.",
+    });
+
+    const hostsWarning = containerEl.createDiv({
+      cls: "mod-warning mcp-hosts-warning setting-item-description",
+    });
+    hostsWarning.hide();
+
+    new Setting(containerEl)
+      .setName("Additional allowed hosts")
+      .setDesc(
+        "One destination hostname or IP per line — not connecting machines. Bare entries allow the host alone or with the server's listening port. Use host:port for another exact port. Omit schemes, paths, and wildcards. Stop and start the server to apply changes.",
+      )
+      .addButton((btn: ButtonComponent) =>
+        btn
+          .setButtonText("Detect this machine")
+          .setTooltip("Append this machine's hostname and network addresses")
+          .onClick(async () => {
+            const merged = [...plugin.settings.allowedHosts];
+            for (const host of detectMachineHosts()) {
+              if (!merged.includes(host)) merged.push(host);
+            }
+            plugin.settings.allowedHosts = merged;
+            await plugin.saveSettings();
+            this.display();
+          }),
+      )
+      .addTextArea((t) => {
+        t.inputEl.rows = 4;
+        t.inputEl.cols = 28;
+        t.inputEl.setAttribute("aria-label", "Additional allowed hosts");
+        t
+          .setValue(plugin.settings.allowedHosts.join("\n"))
+          .onChange(async (v) => {
+            // Lowercased like the bind host: a Host header carrying uppercase
+            // is rejected before it reaches the allowlist.
+            const entries = v.split(/\r?\n/).map((host) => host.trim().toLowerCase()).filter(Boolean);
+            const invalid = entries.filter((entry) => !isValidHostEntry(entry));
+            // The library throws on schemes, paths, and `*`, which would leave
+            // the user with a server that refuses to start. Hold the save until
+            // every line is a Host value instead.
+            if (invalid.length > 0) {
+              t.inputEl.addClass("mcp-input-invalid");
+              hostsWarning.setText(`Not saved — these are not host values: ${invalid.join(", ")}`);
+              hostsWarning.show();
+              return;
+            }
+            t.inputEl.removeClass("mcp-input-invalid");
+            hostsWarning.hide();
+            plugin.settings.allowedHosts = entries;
+            await plugin.saveSettings();
+          });
+      });
+    containerEl.appendChild(hostsWarning);
+
     new Setting(containerEl)
       .setName("Port")
       .setDesc("HTTP port to listen on (1–65535).")
@@ -145,7 +206,7 @@ export class McpSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Bearer token")
       .setDesc(
-        "Optional. If set, clients must send Authorization: Bearer <token>.",
+        "Required. Clients must send Authorization: Bearer <token>.",
       )
       .addText((t) => {
         t.inputEl.type = "password";

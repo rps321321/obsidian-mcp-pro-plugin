@@ -36,7 +36,7 @@ Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
 
 ## Usage
 
-1. Open **Settings → Obsidian MCP Pro**, configure port + optional bearer token.
+1. Open **Settings → Obsidian MCP Pro**, configure the port and a bearer token.
 2. Click **Start** (or the ribbon icon, or the command `MCP Pro: Start server`).
 3. Click **Copy JSON** to get a client config snippet like:
 
@@ -44,7 +44,8 @@ Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
 {
   "mcpServers": {
     "obsidian": {
-      "url": "http://127.0.0.1:3333/mcp"
+      "url": "http://127.0.0.1:3333/mcp",
+      "headers": { "Authorization": "Bearer <your-token>" }
     }
   }
 }
@@ -52,17 +53,46 @@ Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
 
 4. Paste into your client (Cursor's `~/.cursor/mcp.json`, Claude Desktop's `claude_desktop_config.json`, etc.).
 
+### Allowed hosts
+
+The server always accepts `localhost`, `127.0.0.1`, `[::1]`, and the bind
+address, each with the listening port. Machine hostnames and interface IPs are
+not automatic.
+
+**Additional allowed hosts** starts empty. Add other destination hostnames or
+IP addresses, one per line — these are HTTP `Host` values, not connecting
+machines. **Detect this machine** appends this machine's hostname and
+non-loopback IPv4 addresses; nothing is added without that click.
+
+- A bare entry such as `vault.example.com` accepts that value alone or with the
+  server's listening port. On port `3339`, it also accepts `vault.example.com:3339`,
+  but not `vault.example.com:443`. The port-qualified form is derived at start,
+  so changing the port does not strand a saved entry.
+- An explicit entry such as `vault.example.com:443` allows only that host and port.
+- IPv6 accepts bare or bracketed addresses; bare literals are bracketed for you.
+  Use `[2001:db8::1]:443` for an explicit port.
+- Entries are lowercased, and internationalized names are converted to punycode
+  at start. A `Host` header carrying uppercase or Unicode is rejected before it
+  reaches the allowlist, so those forms cannot be allowed by spelling them that
+  way here.
+- Schemes, paths, and `*` are rejected as you type; `*` is not a wildcard
+  anywhere in this stack. Blank lines and surrounding whitespace are ignored.
+- Click **Stop**, then **Start**, to apply host-list or port changes.
+
+To connect through a proxy, use its client-facing MCP URL rather than the local
+bind URL in **Copy JSON**.
+
 ## Security
 
 - **Default bind is loopback** (`127.0.0.1`). The settings tab shows an inline warning the moment you type any other host — binding to `0.0.0.0` or a LAN interface exposes your vault to every device on the network.
-- **Bearer token optional but strongly recommended** if the port is reachable from anywhere other than this machine. The token field is masked, stored in the plugin's data JSON, and compared in constant time on the server side.
+- **Bearer token required.** The token field is masked, stored in the plugin's data JSON, and compared in constant time on the server side.
 - **DNS rebinding protection** is enabled on the HTTP transport — requests with a mismatched `Host` header are rejected.
 - **Vault boundary** — every path the server resolves is realpath-checked against the vault root, so symlinks inside the vault cannot leak data outside it.
 - When you copy the connection snippet, the clipboard contents include your bearer token verbatim. The plugin shows a longer-duration notice when that's the case — don't paste the snippet into shared documents or version control.
 
 ## Architecture
 
-`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild (currently v1.4.0). On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS rebinding protection, optional bearer auth, per-session state, and a 1 h idle-session sweeper, and is cleanly stopped on plugin unload.
+`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild. On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS-rebinding protection, bearer authentication, per-session state, and a 1 h idle-session sweeper, and is cleanly stopped on plugin unload.
 
 ## Development
 
