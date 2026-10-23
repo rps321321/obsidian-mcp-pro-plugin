@@ -1,0 +1,1 @@
+These small synthetic PDF and DOCX files contain no vault or personal data. The runtime suite uses them to check MCP block types and decoded byte identity. They do not establish compatibility with a document renderer or a model provider's conversion path.
