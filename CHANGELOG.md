@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Add CI acceptance against the actual production `main.js`, including concurrent MCP clients, copied connection JSON, authentication, port collisions, restart and session cleanup, and byte-identical PDF/DOCX resource responses. Keep native Obsidian acceptance separate from the Node host harness.
+- Document manual client setup, local and remote connection prerequisites, and the distinction between SDK verification and untested client applications. Replace the source manifest's configuration-free claim with a description of the server it provides; published v0.4.0 assets remain unchanged.
+- Add a development-only SDK connection check using environment-provided URL and token values, without printing secrets or vault results.
 
 ## 0.4.0 — 2026-10-23
 

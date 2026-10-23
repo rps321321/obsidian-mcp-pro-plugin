@@ -3,7 +3,7 @@
   "name": "MCP Pro",
   "version": "0.4.0",
   "minAppVersion": "1.4.0",
-  "description": "Expose your vault to Claude, Cursor, ChatGPT, and any MCP-compatible client over HTTP — no config-file editing.",
+  "description": "Run a token-authenticated MCP server for your vault with configurable tool roles.",
   "author": "rps321",
   "authorUrl": "https://github.com/rps321321",
   "fundingUrl": "https://github.com/sponsors/rps321321",
