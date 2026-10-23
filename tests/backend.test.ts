@@ -563,3 +563,57 @@ test("should redact injected secrets from failure promises, notices, state and l
     await rm(vault, { recursive: true, force: true });
   }
 });
+
+test("should reject an unsupported runtime before migration and continue on Node 24", async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(process.versions, "node")!;
+  const vault = await mkdtemp(join(tmpdir(), "plugin-node-gate-"));
+  const plugin = new McpProPlugin();
+  let loads = 0,
+    saves = 0,
+    tabs = 0;
+  plugin.loadData = async () => {
+    loads++;
+    return { bearerToken: "legacy-preserved" };
+  };
+  plugin.saveData = async () => {
+    saves++;
+  };
+  Object.assign(plugin, {
+    resolveVaultPath: () => vault,
+    addSettingTab: () => {
+      tabs++;
+    },
+    addRibbonIcon: () => undefined,
+    addStatusBarItem: () => ({ setText: () => undefined }),
+    addCommand: () => undefined,
+  });
+  try {
+    Object.defineProperty(process.versions, "node", {
+      ...descriptor,
+      value: "22.23.2",
+    });
+    await assert.rejects(
+      plugin.onload(),
+      /requires an Obsidian installer with Node.js 24 or newer/,
+    );
+    assert.deepEqual([loads, saves, tabs], [0, 0, 0]);
+    assert.equal(
+      (plugin as unknown as { manager?: ServerManager }).manager,
+      undefined,
+    );
+    assert.deepEqual(plugin.settings.tokens, []);
+    Object.defineProperty(process.versions, "node", {
+      ...descriptor,
+      value: "24.22.0",
+    });
+    await plugin.onload();
+    assert.deepEqual([loads, saves, tabs], [1, 1, 1]);
+    assert.equal(plugin.settings.tokens[0]!.token, "legacy-preserved");
+    const manager = (plugin as unknown as { manager: ServerManager }).manager;
+    assert.equal(manager.getState().status, "stopped");
+    await manager.stop();
+  } finally {
+    Object.defineProperty(process.versions, "node", descriptor);
+    await rm(vault, { recursive: true, force: true });
+  }
+});

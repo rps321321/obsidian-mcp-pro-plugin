@@ -14,6 +14,12 @@ export default class McpProPlugin extends Plugin {
   private unsubscribeStatusBar: (() => void) | null = null;
 
   async onload(): Promise<void> {
+    const nodeMajor = Number(process.versions.node.split(".")[0]);
+    if (!Number.isInteger(nodeMajor) || nodeMajor < 24) {
+      throw new Error(
+        "MCP Pro requires an Obsidian installer with Node.js 24 or newer. Update the Obsidian installer before enabling this plugin.",
+      );
+    }
     await this.loadSettings();
 
     const vaultPath = this.resolveVaultPath();

@@ -12,6 +12,12 @@ If the runtime update fails after saving, the manager attempts to stop the endpo
 
 Host and port changes require a restart. Additional allowed hosts are canonicalized and expanded through `hosts.ts`; the core retains its bind and loopback defaults. One manager owns shared MCP services for its vault, while every initialized HTTP session receives a fresh MCP server with that token's resolved Tool list.
 
+## Runtime requirement
+
+The plugin requires an Obsidian installer whose embedded Node.js runtime is version 24 or newer. The plugin checks this before loading or migrating settings, creating the server manager, or registering its UI. Updating the Obsidian application alone may not update its installer runtime. The manifest retains its existing application API minimum; that minimum does not establish runtime compatibility.
+
+The isolated native acceptance environment uses Obsidian 1.14.5, Node.js 24.22.0, and Electron 43.8.3. The backend harness also substitutes the reported runtime version to verify that Node 22 is rejected before any settings load or save and Node 24 proceeds. This substitution is a gate test, not execution on Node 22.
+
 ## Verification and release dependency
 
 Run `node scripts/test-backend.mjs`. The harness minifies and bundles the real manager, settings model, and installed core with the production Node target. It uses real HTTP clients and a temporary vault. The Obsidian Notice class and the settings-tab import are replaced only in this harness. Tests cover migration persistence, presets, snapshot preservation, denied writes, token/session binding, live revocation, serialized saves, and injected save/closure failures. This does not establish behavior inside the native Obsidian application.
