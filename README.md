@@ -2,11 +2,11 @@
 
 A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-Published plugin [v0.4.0](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.0) bundles core 4.1.1, including its corrected SDK minimum. The registry lockfile and clean-built bundle have passed browser and isolated native Obsidian acceptance; see the [validation record](docs/role-settings-validation.md) for tested flows and limits.
+Plugin [v0.4.1](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.1) bundles core 4.1.1, including its corrected SDK minimum. The registry lockfile and clean-built bundle have passed production-artifact checks. The unchanged runtime bundle also has browser and isolated native Obsidian acceptance; see the [validation record](docs/role-settings-validation.md) for tested flows and limits.
 
 ## Connect a local client
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the same [v0.4.0 release](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.0). Put them in `<vault>/.obsidian/plugins/mcp-pro/` and enable the plugin in Community plugins. Use an Obsidian installer with Node.js 24 or newer.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the same [v0.4.1 release](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.1). Put them in `<vault>/.obsidian/plugins/mcp-pro/` and enable the plugin in Community plugins. Use an Obsidian installer with Node.js 24 or newer.
 2. Open **Settings → MCP Pro**. Keep **Bind Address** at `127.0.0.1` for a client on this computer, and select an available port.
 3. Create a labeled token with **Read only**, or another Role containing the Tools the client needs. Choose **Start** and check that the status is `running`.
 4. Choose that token's **Copy Connection JSON…**. Add the configuration using the instructions for the actual client; this plugin does not configure clients automatically. The JSON includes a secret.
@@ -14,7 +14,7 @@ Published plugin [v0.4.0](https://github.com/rps321321/obsidian-mcp-pro-plugin/r
 
 See [client setup and troubleshooting](docs/client-setup.md) for the generated JSON, client-specific documentation, remote-access prerequisites, and a development-only SDK connection check. SDK protocol checks are verified; Claude Desktop, Cursor, Claude Code, and ChatGPT have not been acceptance-tested as applications here.
 
-These source instructions were updated after v0.4.0. Its released manifest still contains an older “no config-file editing” description. The revised source description is for a future build; no replacement v0.4.0 asset is implied.
+Version 0.4.1 includes the corrected manifest description. Client configuration remains a separate manual step.
 
 ## Roles and tokens
 

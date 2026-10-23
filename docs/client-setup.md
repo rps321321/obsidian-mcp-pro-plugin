@@ -4,7 +4,7 @@ The plugin starts a Streamable HTTP MCP endpoint inside desktop Obsidian. It doe
 
 ## Release and verification status
 
-The published baseline is plugin [v0.4.0](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.0), bundled with core 4.1.1 and SDK 1.32.1. Its native verification used an isolated Windows Obsidian 1.14.5 renderer, Electron 43.8.3, and Node.js 24.22.0. See the [validation record](role-settings-validation.md) for artifact hashes, tested flows, and limits. The older v0.3.0 source declared core `^1.4.0` and allowed an empty bearer setting. These instructions target v0.4.0.
+These instructions target plugin [v0.4.1](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.1), bundled with core 4.1.1 and SDK 1.32.1. Its runtime bundle is unchanged from v0.4.0, whose native verification used an isolated Windows Obsidian 1.14.5 renderer, Electron 43.8.3, and Node.js 24.22.0. The patch adds CI coverage, setup guidance and a corrected manifest description. See the [validation record](role-settings-validation.md) for artifact hashes, tested flows, and limits. The older v0.3.0 source declared core `^1.4.0` and allowed an empty bearer setting.
 
 | Client or check           | Evidence and status                                                                                                                                                                          |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

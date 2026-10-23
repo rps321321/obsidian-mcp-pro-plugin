@@ -2,6 +2,18 @@
 
 The desktop plugin uses Obsidian’s settings components and semantic HTML. Apple HIG informs interaction and accessibility decisions; these web controls are not AppKit controls.
 
+## 0.4.1 release verification
+
+The 0.4.1 patch packages the merged production-artifact CI coverage, manual setup guide, development connection checker and corrected manifest description. The clean locked build still resolves core 4.1.1 and SDK 1.32.1. Package, lockfile and manifest versions are 0.4.1; the application API minimum remains 1.4.0 and the embedded Node requirement remains 24 or newer.
+
+The release files have SHA-256 values:
+
+- `main.js`: `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`
+- `styles.css`: `981f4849f80466657ed28e3a009344a957f99d1ea7b772f3dfcf14b4d395d0f9`
+- `manifest.json`: `f46b55f6ef1ddc08cbf61da2af46148bdbe14ad2efb53f905eb5c70d65916ed4`
+
+Runtime and stylesheet bytes match the native-tested 0.4.0 artifacts below. The manifest changes version and description only. This identity comparison preserves the earlier native runtime evidence; it does not claim a new native application run or named-client document-conversion acceptance. Issue #2 remains open until an affected client report can be reproduced.
+
 ## Production artifact CI boundary
 
 After `npm ci` and `npm run build`, `node scripts/test-runtime.mjs` evaluates the existing production `main.js` as CommonJS. It does not compile its internals again or substitute the core, manager, settings model, or connection generator. The host shim provides Obsidian lifecycle methods and data-only settings controls, with an intercepted in-memory clipboard for the actual Copy Connection JSON action. Those controls make no claim about browser layout, accessibility, native rendering, or OS clipboard integration.
