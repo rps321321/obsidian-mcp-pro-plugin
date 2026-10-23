@@ -1,19 +1,62 @@
-.mcp-status {
-  margin-bottom: var(--size-4-2);
+.mcp-settings section,
+.mcp-token {
+  margin-block: var(--size-4-6);
 }
-
-.mcp-status-url {
-  margin-left: var(--size-4-2);
+.mcp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin-block: var(--size-4-2);
 }
-
-.mcp-status-error {
-  margin-top: var(--size-4-1);
+.mcp-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-1);
+  margin-block: var(--size-4-2);
 }
-
-.mcp-status-hint {
-  margin-top: var(--size-4-1);
+.mcp-field input,
+.mcp-field textarea,
+.mcp-actions select {
+  max-width: 100%;
+  min-width: 0;
 }
-
-.mcp-input-invalid {
-  border-color: var(--text-error) !important;
+.mcp-field textarea {
+  resize: vertical;
+}
+.mcp-tool-category {
+  border-block-end: 1px solid var(--background-modifier-border);
+  padding-block: var(--size-4-2);
+}
+.mcp-category-toggle,
+.mcp-tool-choice {
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-4-2);
+  padding-block: var(--size-4-1);
+  cursor: pointer;
+}
+.mcp-tool-choice {
+  margin-inline-start: var(--size-4-6);
+}
+.mcp-tool-choice code {
+  overflow-wrap: anywhere;
+}
+.mcp-tool-choice input,
+.mcp-category-toggle input {
+  flex-shrink: 0;
+}
+.mcp-tool-category summary {
+  cursor: pointer;
+  padding-block: var(--size-4-1);
+}
+.mcp-confirmation:not(:empty) {
+  border-inline-start: 2px solid var(--background-modifier-border);
+  padding-inline-start: var(--size-4-3);
+  margin-block: var(--size-4-3);
+}
+.mcp-feedback,
+.mcp-confirmation,
+.mcp-settings p {
+  overflow-wrap: anywhere;
 }
