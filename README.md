@@ -1,77 +1,57 @@
 # MCP Pro
 
-A community plugin that runs an **MCP server** inside your vault. One click, and your notes are available to Claude Desktop, Cursor, ChatGPT, or any MCP-compatible client — over HTTP, no config-file editing.
+A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-Wraps the [`obsidian-mcp-pro`](https://github.com/rps321321/obsidian-mcp-pro) library.
+Version 0.4.0 requires the published `obsidian-mcp-pro: ^4.1.1` package, including its corrected SDK minimum. The registry lockfile and clean-built bundle have passed browser and isolated native Obsidian acceptance; see the [validation record](docs/role-settings-validation.md). This validation does not establish publication of the plugin.
 
-## Features
+## Roles and tokens
 
-- One-click start/stop from the ribbon or command palette
-- Status bar indicator showing port and state
-- Auto-start on app launch (optional)
-- Bearer-token authentication for remote use
-- Copy-to-clipboard connection snippet for client configs
-- Everything bundled — no separate Node install required
+Create a separately labeled token for each client and assign a Role. Six predefined Roles provide saved Tool selections: Full Access, Read only, Search only, Write only, Create-only, and Append-only. Custom Roles can be created, edited, or duplicated. Nine expandable categories show selection counts and mixed checkbox states. A Role assigned to tokens cannot be deleted until those tokens are reassigned or revoked.
 
-## Install
+Saving a shared Role names the affected tokens before applying the change. Tool edits, token reassignment, regeneration, and revocation close affected sessions; clients must initialize again. Name and label edits preserve sessions. Operations already executing are not rolled back.
 
-### From a GitHub release (recommended)
+Migration preserves an existing bearer token and assigns it to Full Access. An empty legacy bearer generates a random 256-bit token. Migration must save successfully before the endpoint can run. Existing version-2 Role snapshots never acquire newly introduced Tools automatically, including Full Access. Invalid or unsupported settings fail closed.
 
-1. Grab `main.js` and `manifest.json` from the [latest release](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/latest).
-2. Drop them into `<your-vault>/.obsidian/plugins/mcp-pro/`.
-3. Enable the plugin in **Settings → Community plugins**.
+Tokens are masked until revealed. Copy Token and Copy Connection JSON place the secret on your clipboard. Regeneration and revocation require confirmation. Tokens are stored as plaintext in the vault's plugin settings; vault sync and backups may copy them. Masking does not encrypt this storage.
 
-That's it — everything is bundled into `main.js`, no `node_modules` required.
+## Connection settings
 
-### From source
+Start and stop from settings, the ribbon, or the command palette. Auto-start is optional. The default bind address is loopback. Changing the bind address, port, or allowed hosts requires a restart; non-loopback binding exposes the endpoint to other devices that can reach that interface.
 
-```bash
-git clone https://github.com/rps321321/obsidian-mcp-pro-plugin.git
-cd obsidian-mcp-pro-plugin
-npm install
-npm run build
-```
+Additional allowed hosts describe destination `Host` headers, not client addresses. Entries are canonicalized to lowercase ASCII, with international domain names converted to punycode and IPv6 addresses enclosed in brackets. A bare host also permits its active server port; an explicit port permits that exact entry. The core retains its bind and loopback defaults. Invalid lines reject the entire edit. Detect Hosts only fills a draft after an explicit click; review and save it before use.
 
-Then copy `main.js` + `manifest.json` into your vault's plugin folder as above.
+The Host settings draw on the behavior proposed in [PR #14](https://github.com/rps321321/obsidian-mcp-pro-plugin/pull/14), with a separately implemented validation helper. Canonicalization is this plugin's policy: the current core can accept an explicitly allowed uppercase Host entry.
 
-## Usage
+## Permission boundaries
 
-1. Open **Settings → Obsidian MCP Pro**, configure port + optional bearer token.
-2. Click **Start** (or the ribbon icon, or the command `MCP Pro: Start server`).
-3. Click **Copy JSON** to get a client config snippet like:
+Roles select Tools; they do not create separate vaults or per-token folder boundaries. Global folder restrictions apply to every client. A read-only Role excludes `index_vault`; indexing can persist data or contact a configured provider. Searches can disclose note contents. Write operations can return affected text. The `delete_note` Tool includes permanent deletion, edits can destroy content, and moving a note may rewrite links in other notes. Review individual Tools before granting them.
 
-```json
-{
-  "mcpServers": {
-    "obsidian": {
-      "url": "http://127.0.0.1:3333/mcp"
-    }
-  }
-}
-```
+Version-2 settings are unsupported by older plugin versions. Before downgrading, stop the endpoint and restore a matching settings backup together with the older plugin.
 
-4. Paste into your client (Cursor's `~/.cursor/mcp.json`, Claude Desktop's `claude_desktop_config.json`, etc.).
+## Runtime and installation
 
-## Security
+The plugin requires an Obsidian installer with embedded Node.js 24 or newer. An application-only update can leave the older installer runtime in place. The plugin checks the runtime before loading or migrating settings. No separate Node installation is needed. The manifest's application API minimum does not establish embedded-runtime compatibility.
 
-- **Default bind is loopback** (`127.0.0.1`). The settings tab shows an inline warning the moment you type any other host — binding to `0.0.0.0` or a LAN interface exposes your vault to every device on the network.
-- **Bearer token optional but strongly recommended** if the port is reachable from anywhere other than this machine. The token field is masked, stored in the plugin's data JSON, and compared in constant time on the server side.
-- **DNS rebinding protection** is enabled on the HTTP transport — requests with a mismatched `Host` header are rejected.
-- **Vault boundary** — every path the server resolves is realpath-checked against the vault root, so symlinks inside the vault cannot leak data outside it.
-- When you copy the connection snippet, the clipboard contents include your bearer token verbatim. The plugin shows a longer-duration notice when that's the case — don't paste the snippet into shared documents or version control.
+Native acceptance uses the official Obsidian 1.14.5 renderer with Node.js 24.22.0 and Electron 43.8.3, inside an isolated test bootstrap and synthetic vault. See [the validation record](docs/role-settings-validation.md) for coverage and limitations.
 
-## Architecture
-
-`obsidian-mcp-pro` is bundled directly into the plugin's `main.js` via esbuild (currently v1.4.0). On start, the plugin calls the library's `buildMcpServer()` + `startHttpServer()` in-process (no child process, no node_modules). The HTTP server listens on the configured port with DNS rebinding protection, optional bearer auth, per-session state, and a 1 h idle-session sweeper, and is cleanly stopped on plugin unload.
+For a published release, copy `main.js`, `manifest.json`, and `styles.css` together into `<vault>/.obsidian/plugins/mcp-pro/`, then enable it in Community plugins. Source version metadata does not establish publication of this plugin.
 
 ## Development
 
-```bash
-npm install
-npm run dev   # watches src/ and rebuilds main.js
+Use Node.js 24 or newer. Install the locked registry dependencies with `npm ci`, then run:
+
+```sh
+npm run build
+node scripts/test-backend.mjs
+node --experimental-strip-types --test tests/hosts*.test.mjs
+node scripts/test-settings-ui.mjs
 ```
 
-Symlink the plugin folder into a test vault's `.obsidian/plugins/` so reloads pick up rebuilds.
+The lockfile resolves core 4.1.1 and SDK 1.32.1 from npm. The [validation record](docs/role-settings-validation.md) includes final acceptance of the registry-built bundle and retains earlier packed-core and intermediate 4.1.0 verification separately as historical evidence.
+
+The development bundler is pinned to esbuild 0.25.12. The fixed [development-server advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is not reached by this repository's configured `watch()` and `rebuild()` paths, which do not start esbuild's HTTP server. Since esbuild 0.25, a failed watch build removes stale output until a successful rebuild restores it.
+
+The plugin creates a fresh MCP server for each HTTP session and shares vault services through its manager. Settings changes are serialized with start and stop, saved before live authorization updates, and validated as immutable snapshots. See [authorization settings](docs/authorization-settings.md).
 
 ## License
 

@@ -1,0 +1,113 @@
+# Role settings design and verification
+
+The desktop plugin uses Obsidian’s settings components and semantic HTML. Apple HIG informs interaction and accessibility decisions; these web controls are not AppKit controls.
+
+## Design checkpoint
+
+Two alternatives were considered before implementation:
+
+| Alternative                                                          | Benefit                                                                                                                           | Trade-off                                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Inline role editor in plugin settings, followed by token assignments | Keeps shared roles and their token assignments in the same context; supports resizable settings windows without nested modal work | The page is longer; collapsed tool categories limit scanning cost                        |
+| Role list with a modal editor                                        | Shorter settings overview and a focused task                                                                                      | Forty-one tool choices make a long modal; impact confirmation adds another modal context |
+
+The agreed choice is the inline editor. Each category has a separate select-all checkbox and disclosure triangle. Selecting permissions never expands a category. Individual checkbox changes update the native mixed state and the enabled count. Role changes remain a draft until reviewed and saved. Changing the selected role with a draft offers Save Changes, Discard Changes, and Cancel.
+
+Shared-role review lists affected token labels and explains that sessions close and clients must reinitialize. If assignments change during review, saving rejects the stale review. Tokens reference roles rather than owning separate tool checklists. Create New Role beside a token’s selector returns the saved role to that selector without changing the token until it is saved. Assigned roles cannot be deleted until their tokens are reassigned or revoked.
+
+Additional hosts are destination `Host` header values. All invalid draft line numbers are reported together, and the saved list remains unchanged. Machine detection occurs only when its button is activated and changes the draft before an explicit save.
+
+## Apple HIG evidence and checks
+
+The official Apple mirror was captured on 2026-08-25. Its `AGENT_GUIDE.md` and `INDEX.md` were read before implementation. The local `DESIGN_RULES.md` is a custom interpretation checklist, not Apple-authored guidance. Canonical sources and applicable checks are recorded below.
+
+| Canonical Apple source                                                                                                                                                                                                                                                                       | Applicable implementation and validation                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [Settings](https://developer.apple.com/design/human-interface-guidelines/settings)                                                                                                                                                                                                           | Enduring server and role configuration stays in Obsidian’s existing plugin settings surface                                    |
+| [Toggles](https://developer.apple.com/design/human-interface-guidelines/toggles)                                                                                                                                                                                                             | macOS checkbox hierarchy; all/none/mixed category state reflects child choices                                                 |
+| [Disclosure controls](https://developer.apple.com/design/human-interface-guidelines/disclosure-controls)                                                                                                                                                                                     | Multiple labelled disclosure triangles for a list hierarchy, independent from category checkboxes                              |
+| [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)                                                                                                                                                                                                 | Accessible names, text counts, keyboard activation, visible focus, enlarged text and wrapping; no color-only permission states |
+| [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)                                                                                                                                                                                                             | Explicit outcome labels, native controls, deliberate destructive confirmation and cancellation                                 |
+| [Labels](https://developer.apple.com/design/human-interface-guidelines/labels), [Writing](https://developer.apple.com/design/human-interface-guidelines/writing)                                                                                                                             | Persistent field labels, direct outcome descriptions, inline actionable errors and empty-state guidance                        |
+| [Text fields](https://developer.apple.com/design/human-interface-guidelines/text-fields), [Text views](https://developer.apple.com/design/human-interface-guidelines/text-views), [Entering data](https://developer.apple.com/design/human-interface-guidelines/entering-data)               | Named role/token fields, host textarea, validation before persistence, preserved invalid drafts                                |
+| [Pop-up buttons](https://developer.apple.com/design/human-interface-guidelines/pop-up-buttons), [Menus](https://developer.apple.com/design/human-interface-guidelines/menus)                                                                                                                 | Native single-choice role selectors; separate buttons for creation actions                                                     |
+| [Alerts](https://developer.apple.com/design/human-interface-guidelines/alerts), [Modality](https://developer.apple.com/design/human-interface-guidelines/modality)                                                                                                                           | In-context review and confirmation; no modal interruption for routine checkbox changes                                         |
+| [Privacy](https://developer.apple.com/design/human-interface-guidelines/privacy)                                                                                                                                                                                                             | Masked secrets, deliberate reveal/copy warning, generic failure messages, no token logging; storage variance below             |
+| [Layout](https://developer.apple.com/design/human-interface-guidelines/layout), [Lists and tables](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables), [Designing for macOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) | Grouped settings, progressive disclosure, wrapping actions and text, narrow and wide desktop windows                           |
+| [Dark Mode](https://developer.apple.com/design/human-interface-guidelines/dark-mode), [Color](https://developer.apple.com/design/human-interface-guidelines/color), [Typography](https://developer.apple.com/design/human-interface-guidelines/typography)                                   | Host semantic color, spacing and font variables; no hard-coded product colors or custom fonts                                  |
+| [Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards), [Focus and selection](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection)                                                                                               | Native Tab/Space behavior, cancellation returns focus, user-triggered editor transitions focus a meaningful control            |
+
+### Storage variance
+
+Apple recommends storing sensitive material in an encrypted keychain. This cross-platform Obsidian plugin retains the existing plugin-data persistence boundary: tokens are stored unencrypted in the vault’s plugin settings. Sync and backups may copy them. Masking does not encrypt them. The UI states this limitation directly. This change does not claim OS keychain storage or add an OS credential-store dependency.
+
+## Reproducible checks
+
+`npm run build` checks TypeScript and creates the actual plugin bundle. Backend and host acceptance scripts cover persistence, migration, live HTTP authorization and host validation separately.
+
+`node scripts/test-settings-ui.mjs` uses an existing Playwright installation and an installed Chromium-family browser. Set `PLAYWRIGHT_MODULE_PATH` to an external Playwright entry point and `UI_BROWSER_EXECUTABLE` when necessary. No browser is downloaded. Its disposable browser fixture runs the real role/token UI modules with a small catalog/crypto/host compatibility adapter; it does not prove Obsidian integration or host parsing. It intercepts clipboard writes and removes its owned temporary directory.
+
+`OBSIDIAN_UI_CDP=<isolated endpoint> node scripts/test-settings-obsidian.mjs` runs those interactions in the official Obsidian renderer. It refuses any vault outside the specifically named `ui-runtime/vault-role-settings` fixture. It verifies clipboard interception before copy actions, keeps bearer values out of output, takes redacted accessibility snapshots before and after actions, and restores the fixture’s starting settings. Do not point it at a personal vault.
+
+The checked flows include preset snapshots, category all/none/mixed states, keyboard checkbox activation, dirty-draft discard, shared-role review/cancel/save and stale-assignment rejection, custom create/duplicate/delete, token-role assignment, Create New Role return context, masked reveal/hide/copy, regenerate cancellation and completion, revoke, save-failure draft retention, all-invalid-host-lines reporting, host canonicalization and detect-without-save behavior.
+
+The official Windows Obsidian 1.14.5 renderer was exercised with Node 24.22.0 and Electron 43.8.3 in a disposable vault and profile. A test-only bootstrap loads the unchanged official application archive while suppressing protocol registration, login-item changes and the updater. Native inspection caught two host-integration differences that the browser fixture could not detect: Obsidian settings inputs need explicit accessible names, and mixed checkboxes need Obsidian’s `data-indeterminate` rendering marker as well as the native `indeterminate` property. The final checkbox marker keeps the dash visible without inventing a color or replacing native checkbox semantics.
+
+The native live-session check uses both raw MCP requests and an external SDK client. A UI role reassignment invalidates an existing session; reinitialization advertises only the new tools. A subsequent UI role edit invalidates that session and reinitializes with an empty tool list. Omitted tool calls are rejected.
+
+Native evidence must name the source revision, core tarball identity, compiled bundle hash, app/runtime version, and isolation setup. Windows Obsidian verification does not establish macOS VoiceOver behavior, every third-party theme, OS clipboard integration, or physical display/lighting contrast. Those remain explicit acceptance limits.
+
+## Historical candidate acceptance record — 2026-10-23
+
+Product and harness revision: `ee5b0f7a8f2caa516de7472c971c3a5cdd9e7ac0` (UI implementation `dd3ab67`). The core candidate has the same tree as merged core revision `53890c3c2ed026864cfaafe6f632db8b2412a8dd`; its tarball SHA-256 is `ba7707923e3fdd52bf68d7c3a5acfd624a9689bf189c24425932115eb2589d45`. It was installed temporarily without saving a local-path dependency or changing the lockfile. This is candidate verification, not proof that the required core version has been published to npm.
+
+Compiled artifact SHA-256 values:
+
+- `main.js`: `4e151516c70703aaf4d64b0644a611e74502c66c23ecd5bac9727f252a7440b5`
+- `styles.css`: `981f4849f80466657ed28e3a009344a957f99d1ea7b772f3dfcf14b4d395d0f9`
+
+The exact revision passed the TypeScript/production build, 15 backend tests, 46 host tests, the disposable browser interaction checks, and the official Obsidian native suite with 141 redacted accessibility snapshots. The final native run intercepted clipboard writes in both renderer realms before every observed action. Raw MCP requests and external SDK clients both verified old-session rejection, new append-only tool advertisements, direct retrieval denial, and reinitialization with no tools after a UI role edit. Initial synthetic settings were restored and the fixture MCP endpoint stopped afterward.
+
+Final PNGs were inspected in the actual Windows Obsidian 1.14.5 renderer. Light and dark wide layouts retained readable labels and visible mixed-state dashes. A 640-pixel settings window provided 364 pixels of content width; enlarged primary/tool text measured 30 pixels from a 15-pixel baseline, descriptions 24 from 12, and control text 26 from 13. Category labels, tool names, token controls and privacy warnings wrapped without horizontal overflow. Token values remained masked. A keyboard-focused Create Custom Role button displayed Obsidian’s visible native focus ring.
+
+Computed foreground/background text contrast on the tested solid host backgrounds was 15.91:1 for light-mode labels and 6.69:1 for descriptions; dark-mode values were 12.19:1 and 8.13:1. These measurements cover those text samples and default host colors, not every theme, focus-ring contrast, physical display condition or assistive technology. macOS VoiceOver and OS clipboard integration were not tested.
+
+The actual candidate dependency tree passed production audit with zero advisories (`npm audit --omit=dev --package-lock=false`). At that revision, the complete installed tree retained the moderate development-only esbuild 0.24.2 advisory, [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). The deliberately unchanged registry lockfile still represented the older published dependency; a clean registry install and build were outstanding release gates.
+
+## Intermediate 4.1.0 registry verification — 2026-10-23
+
+After npm exposed core 4.1.0, the dependency was updated to `^4.1.0` and esbuild was pinned to `0.25.12`. The lockfile uses the real npm registry tarball, with integrity `sha512-ProBbY5KhfILO0c19Vf2wf/aIQSliisdEBIcDE9VWl3IwdDYss8Q/wMUsPgVZgGvUlFhkisVoJ9w7IWktHb6aA==` and registry shasum `579a7066837c68f6702c428d4b30c03dd213b796`. No local tarball paths or dependency overrides are used.
+
+A first lockfile update retained SDK 1.29.0 within core's declared range. That older SDK does not enforce the configured input budget. Compatible audit remediation refreshed the lockfile to SDK 1.32.1 and the other patched dependencies, without `--force`. The resulting tree also resolves Obsidian development types 1.14.4 and moment 2.31.0 within the existing declared range.
+
+The resulting lockfile passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. The new `main.js` SHA-256 is `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`. Browser and native acceptance must be repeated against this bundle; the historical snapshots and bundle hash above are not acceptance of the dependency update.
+
+A live HTTP SDK client against that installed registry tree verified acceptance at 16 counted elements, rejection at 17, and a successful subsequent call. That lockfile proved the corrected dependency combination for this plugin only. Core 4.1.0 permitted older SDK versions through its declared range, so the core minimum-version correction and adoption of that published package remained required before final plugin release selection. The 4.1.1 verification below supersedes this intermediate dependency state.
+
+The esbuild advisory concerns its HTTP `serve()` feature, which the configured development watch and production rebuild do not invoke. [esbuild 0.25.0](https://github.com/evanw/esbuild/releases/tag/v0.25.0) fixed that advisory and changed failed watch builds to delete stale output until a successful rebuild. The exact 0.25.12 pin keeps this update within that patched minor line.
+
+## Core 4.1.1 registry verification — 2026-10-23
+
+The plugin now requires `obsidian-mcp-pro: ^4.1.1`. npm metadata and the installed package both declare core's SDK minimum as `^1.32.1`; the lockfile resolves core 4.1.1, SDK 1.32.1, and esbuild 0.25.12 without local paths or overrides. The registry core integrity is `sha512-7OLBlcQ8dPOrT/rKrkTChVvaWjkjFJ8bxEZPJmIgq5Y5GmsK7eogwb0V9KeZQkzjSem+1gjDlE+7UvzdcLdmiQ==`, with shasum `5b5f1f2cfb31a78a860760b63af5602e264f92ca`.
+
+The final dependency tree passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. A live HTTP SDK client accepted 16 counted elements, rejected 17, and completed a subsequent normal call. The clean-built `main.js` SHA-256 remains `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`, identical to the intermediate registry build because this core patch changes dependency metadata rather than bundled application source.
+
+The published core minimum-version correction is adopted. Final browser and native acceptance of this registry dependency unit is recorded below. Publication of the plugin remains a separate gate. The historical candidate record above remains evidence only for its named revision and bundle.
+
+## Final registry native acceptance — 2026-10-23
+
+Product and harness revision `1f263254b20cd5847409126c7cd1ba27830053c7` was tested with the published core 4.1.1 registry dependency (core revision `36a755c`), SDK 1.32.1 and esbuild 0.25.12. No local dependency paths or overrides were used. The copied fixture files matched the reviewed worktree byte for byte:
+
+- `main.js` SHA-256: `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`
+- `styles.css` SHA-256: `981f4849f80466657ed28e3a009344a957f99d1ea7b772f3dfcf14b4d395d0f9`
+- `manifest.json` SHA-256: `4a88b740d02f11233333604e9724f55f821cd4d7cb9decfe2f22043a559d6f51`
+
+The official Windows Obsidian 1.14.5 renderer ran with Electron 43.8.3 and embedded Node 24.22.0. A test-only bootstrap loaded the unchanged official application archive with an isolated profile and synthetic vault, disabling global protocol, login-item and updater integration. This was an actual Obsidian renderer test, not an installed-app or real-vault qualification.
+
+The native suite passed 141 redacted accessibility snapshots, including Role CRUD, mixed category selection and keyboard controls, draft cancellation, save failures, token lifecycle, and Host validation/restart feedback. Raw MCP requests and external SDK clients verified old-session rejection after UI token reassignment and shared Role permission edits, append-only advertisements after reinitialization, direct retrieval denial, and reinitialization with no Tools. Clipboard writes were intercepted and checked in both renderer realms before every observed copy action; OS clipboard integration was not tested. The disposable browser suite also passed. Full and production npm audits both reported zero advisories.
+
+All six final native PNGs were personally inspected and independently reviewed: light and dark wide layouts, dark narrow Roles and Tags at 200% text size, light narrow tokens at 200%, and dark keyboard focus. At a 640-pixel window width, content measured 364 pixels; primary/Tool text increased from 15 to 30 pixels, descriptions from 12 to 24, and controls from 13 to 26. Mixed-state dashes, wrapped labels and privacy warnings remained visible without horizontal overflow, secrets stayed masked, and the Create Custom Role button showed the host focus ring. These checks revalidated the applicable HIG controls, accessibility, layout, writing, settings and appearance criteria above against the registry-built bundle.
+
+Computed contrast on the sampled default solid host backgrounds measured 15.91:1 for light labels and 6.69:1 for descriptions; dark values were 12.19:1 and 8.13:1. This does not measure every theme, focus-ring contrast or physical viewing condition. macOS VoiceOver remains untested.
+
+Initial synthetic settings were restored, the fixture MCP endpoint stopped, and only the verified owned application was quit. Its process tree and debug listener were gone afterward; no global Obsidian profile was created. Historical candidate evidence was preserved separately. Local final evidence is retained under `ui-runtime/evidence/registry-1f26325` in the maintainer's ignored issue-delivery directory. This docs-only acceptance record does not change the tested bundle or establish plugin publication.
