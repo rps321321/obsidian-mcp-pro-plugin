@@ -1,13 +1,14 @@
 import { FileSystemAdapter, Plugin } from "obsidian";
+import { McpSettingsTab } from "./settings";
 import {
   DEFAULT_SETTINGS,
-  McpSettingsTab,
+  loadSettingsData,
   type Settings,
-} from "./settings";
+} from "./settings-model";
 import { ServerManager } from "./server-manager";
 
 export default class McpProPlugin extends Plugin {
-  settings: Settings = { ...DEFAULT_SETTINGS };
+  settings: Settings = DEFAULT_SETTINGS;
   private manager!: ServerManager;
   private statusBarEl: HTMLElement | null = null;
   private unsubscribeStatusBar: (() => void) | null = null;
@@ -22,9 +23,9 @@ export default class McpProPlugin extends Plugin {
 
     this.addRibbonIcon("server", "Toggle server", () => {
       if (this.manager.isRunning()) {
-        void this.manager.stop();
+        void this.manager.stop().catch(() => undefined);
       } else {
-        void this.manager.start();
+        void this.manager.start().catch(() => undefined);
       }
     });
 
@@ -45,38 +46,56 @@ export default class McpProPlugin extends Plugin {
     this.addCommand({
       id: "start-server",
       name: "Start server",
-      callback: () => { void this.manager.start(); },
+      callback: () => {
+        void this.manager.start().catch(() => undefined);
+      },
     });
     this.addCommand({
       id: "stop-server",
       name: "Stop server",
-      callback: () => { void this.manager.stop(); },
+      callback: () => {
+        void this.manager.stop().catch(() => undefined);
+      },
     });
 
     if (this.settings.autoStart) {
-      // Defer until workspace ready; spawning a child during onload can
-      // delay startup noticeably on slower machines.
-      this.app.workspace.onLayoutReady(() => { void this.manager.start(); });
+      // Defer listener startup until Obsidian has opened the vault workspace.
+      this.app.workspace.onLayoutReady(() => {
+        void this.manager.start().catch(() => undefined);
+      });
     }
   }
 
   onunload(): void {
     this.unsubscribeStatusBar?.();
     this.unsubscribeStatusBar = null;
-    void this.manager?.stop();
+    void this.manager?.stop().catch(() => undefined);
   }
 
   private resolveVaultPath(): string {
     const adapter = this.app.vault.adapter;
     if (adapter instanceof FileSystemAdapter) return adapter.getBasePath();
-    throw new Error("Unable to determine vault filesystem path (desktop-only plugin).");
+    throw new Error(
+      "Unable to determine vault filesystem path (desktop-only plugin).",
+    );
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    try {
+      const loaded = loadSettingsData(await this.loadData());
+      if (loaded.migrated) await this.saveData(loaded.settings);
+      this.settings = loaded.settings;
+    } catch {
+      throw new Error(
+        "MCP settings could not be loaded or migrated. Server startup was cancelled.",
+      );
+    }
   }
 
-  async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+  updateSettings(change: (current: Settings) => Settings): Promise<void> {
+    return this.manager.updateSettings(change, async (next) => {
+      await this.saveData(next);
+      this.settings = next;
+    });
   }
 }
