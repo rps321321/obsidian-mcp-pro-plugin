@@ -2,8 +2,7 @@
 
 A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-**0.4.0 preparation. Unreleased.** Core 4.1.0 is published on npm, and this branch now tracks `obsidian-mcp-pro: ^4.1.0` with a verified registry lockfile and clean-install build. Publication of this plugin and native acceptance of the current registry-built bundle remain separate release gates.
-This is an intermediate dependency update. A core follow-up must raise the SDK minimum so consumers retaining older lockfiles also enforce the tool input budget; the plugin must adopt that published correction before release.
+**0.4.0 preparation. Unreleased.** This branch tracks the published `obsidian-mcp-pro: ^4.1.1` package, including its corrected SDK minimum, with a verified registry lockfile and clean-install build. Publication of this plugin and native acceptance of the current registry-built bundle remain separate release gates.
 
 ## Roles and tokens
 
@@ -48,7 +47,7 @@ node --experimental-strip-types --test tests/hosts*.test.mjs
 node scripts/test-settings-ui.mjs
 ```
 
-The lockfile resolves core 4.1.0 and SDK 1.32.1 from npm. Earlier packed-core verification is retained as historical evidence in [the validation record](docs/role-settings-validation.md); it does not establish acceptance of the current compiled bundle.
+The lockfile resolves core 4.1.1 and SDK 1.32.1 from npm. Earlier packed-core and intermediate 4.1.0 verification are retained as historical evidence in [the validation record](docs/role-settings-validation.md); they do not establish acceptance of the current compiled bundle.
 
 The development bundler is pinned to esbuild 0.25.12. The fixed [development-server advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is not reached by this repository's configured `watch()` and `rebuild()` paths, which do not start esbuild's HTTP server. Since esbuild 0.25, a failed watch build removes stale output until a successful rebuild restores it.
 

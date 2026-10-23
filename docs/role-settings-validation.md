@@ -74,7 +74,7 @@ Computed foreground/background text contrast on the tested solid host background
 
 The actual candidate dependency tree passed production audit with zero advisories (`npm audit --omit=dev --package-lock=false`). At that revision, the complete installed tree retained the moderate development-only esbuild 0.24.2 advisory, [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). The deliberately unchanged registry lockfile still represented the older published dependency; a clean registry install and build were outstanding release gates.
 
-## Registry dependency verification — 2026-10-23
+## Intermediate 4.1.0 registry verification — 2026-10-23
 
 After npm exposed core 4.1.0, the dependency was updated to `^4.1.0` and esbuild was pinned to `0.25.12`. The lockfile uses the real npm registry tarball, with integrity `sha512-ProBbY5KhfILO0c19Vf2wf/aIQSliisdEBIcDE9VWl3IwdDYss8Q/wMUsPgVZgGvUlFhkisVoJ9w7IWktHb6aA==` and registry shasum `579a7066837c68f6702c428d4b30c03dd213b796`. No local tarball paths or dependency overrides are used.
 
@@ -82,6 +82,14 @@ A first lockfile update retained SDK 1.29.0 within core's declared range. That o
 
 The resulting lockfile passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. The new `main.js` SHA-256 is `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`. Browser and native acceptance must be repeated against this bundle; the historical snapshots and bundle hash above are not acceptance of the dependency update.
 
-A live HTTP SDK client against this installed registry tree verified acceptance at 16 counted elements, rejection at 17, and a successful subsequent call. This lockfile proves the corrected dependency combination for this plugin only. Core 4.1.0 still permits older SDK versions through its declared range; the core minimum-version correction and adoption of that published package remain required before final plugin release selection.
+A live HTTP SDK client against that installed registry tree verified acceptance at 16 counted elements, rejection at 17, and a successful subsequent call. That lockfile proved the corrected dependency combination for this plugin only. Core 4.1.0 permitted older SDK versions through its declared range, so the core minimum-version correction and adoption of that published package remained required before final plugin release selection. The 4.1.1 verification below supersedes this intermediate dependency state.
 
 The esbuild advisory concerns its HTTP `serve()` feature, which the configured development watch and production rebuild do not invoke. [esbuild 0.25.0](https://github.com/evanw/esbuild/releases/tag/v0.25.0) fixed that advisory and changed failed watch builds to delete stale output until a successful rebuild. The exact 0.25.12 pin keeps this update within that patched minor line.
+
+## Core 4.1.1 registry verification — 2026-10-23
+
+The plugin now requires `obsidian-mcp-pro: ^4.1.1`. npm metadata and the installed package both declare core's SDK minimum as `^1.32.1`; the lockfile resolves core 4.1.1, SDK 1.32.1, and esbuild 0.25.12 without local paths or overrides. The registry core integrity is `sha512-7OLBlcQ8dPOrT/rKrkTChVvaWjkjFJ8bxEZPJmIgq5Y5GmsK7eogwb0V9KeZQkzjSem+1gjDlE+7UvzdcLdmiQ==`, with shasum `5b5f1f2cfb31a78a860760b63af5602e264f92ca`.
+
+The final dependency tree passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. A live HTTP SDK client accepted 16 counted elements, rejected 17, and completed a subsequent normal call. The clean-built `main.js` SHA-256 remains `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`, identical to the intermediate registry build because this core patch changes dependency metadata rather than bundled application source.
+
+The published core minimum-version correction is adopted. Final browser and native acceptance of this registry dependency unit, and publication of the plugin itself, remain separate gates. The historical candidate record above remains evidence only for its named revision and bundle.
