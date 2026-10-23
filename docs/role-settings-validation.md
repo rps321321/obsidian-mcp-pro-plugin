@@ -2,6 +2,16 @@
 
 The desktop plugin uses Obsidian’s settings components and semantic HTML. Apple HIG informs interaction and accessibility decisions; these web controls are not AppKit controls.
 
+## Production artifact CI boundary
+
+After `npm ci` and `npm run build`, `node scripts/test-runtime.mjs` evaluates the existing production `main.js` as CommonJS. It does not compile its internals again or substitute the core, manager, settings model, or connection generator. The host shim provides Obsidian lifecycle methods and data-only settings controls, with an intercepted in-memory clipboard for the actual Copy Connection JSON action. Those controls make no claim about browser layout, accessibility, native rendering, or OS clipboard integration.
+
+The temporary vault contains a note and synthetic PDF/DOCX fixtures. Real SDK clients initialize simultaneously, advertise the expected read tools, read the note, disconnect, and reconnect independently. The same artifact rejects missing and incorrect credentials, rejects empty credential values at startup, and preserves authentication with an intentionally empty token list. The generated connection JSON is used by a real SDK client. An occupied real loopback port produces a clean manager error; stop releases the port, restart refuses an old session, and a new session works. Attachment calls return literal `text`/`resource` block types, expected MIME types and vault URIs, and unchanged decoded fixture bytes. The harness records the production bundle SHA-256 and core/SDK lockfile versions.
+
+Two controlled fault builds checked the regression guards. Temporarily reusing one MCP server made the second SDK session fail with HTTP 500. Temporarily corrupting the copied bearer made the generated-configuration SDK connection fail with HTTP 401. Both guards passed after restoring the original source and production build. No injected fault or product change is retained. The restored bundle hash is `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`, matching the registry-native acceptance record below.
+
+The existing `test-backend.mjs` still separately compiles source for authorization and persistence fault tests. Native release acceptance must load the built plugin in a supported Obsidian installer, record the actual embedded Node/Electron versions and bundle identity, and repeat the documented UI and live-session smoke tests. Its evidence and limitations below are preserved. The Node artifact suite does not prove behavior in a client's downstream PDF/DOCX conversion path; that diagnosis remains issue #2.
+
 ## Design checkpoint
 
 Two alternatives were considered before implementation:

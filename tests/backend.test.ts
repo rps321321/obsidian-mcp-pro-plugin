@@ -260,7 +260,7 @@ async function fixture(
   }
 }
 
-test("should serve two isolated real HTTP sessions through the production-bundled manager", () =>
+test("should serve two isolated real HTTP sessions through the source-bundled manager", () =>
   fixture(
     async ({ read, write, readTransport, writeTransport, vault, request }) => {
       assert.deepEqual(

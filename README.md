@@ -43,11 +43,14 @@ Use Node.js 24 or newer. Install the locked registry dependencies with `npm ci`,
 ```sh
 npm run build
 node scripts/test-backend.mjs
+node scripts/test-runtime.mjs
 node --experimental-strip-types --test tests/hosts*.test.mjs
 node scripts/test-settings-ui.mjs
 ```
 
 The lockfile resolves core 4.1.1 and SDK 1.32.1 from npm. The [validation record](docs/role-settings-validation.md) includes final acceptance of the registry-built bundle and retains earlier packed-core and intermediate 4.1.0 verification separately as historical evidence.
+
+CI tests the actual production `main.js` with temporary vaults and real MCP SDK clients. The harness replaces only Obsidian's host API and clipboard boundary; it checks sessions, credentials, copied connection JSON, restart behavior, and attachment resource bytes. It logs the tested artifact hash and locked core/SDK versions. This Node harness does not replace the separate native Obsidian release smoke test.
 
 The development bundler is pinned to esbuild 0.25.12. The fixed [development-server advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is not reached by this repository's configured `watch()` and `rebuild()` paths, which do not start esbuild's HTTP server. Since esbuild 0.25, a failed watch build removes stale output until a successful rebuild restores it.
 
