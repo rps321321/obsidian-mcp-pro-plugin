@@ -45,6 +45,14 @@ async function run(url, token = secret) {
 test("connection check reports missing input and stopped endpoints safely", async () => {
   assert.match((await run("", "")).output, /Set MCP_SERVER_URL/);
   assert.match((await run("not a URL")).output, /Set MCP_SERVER_URL/);
+  assert.match(
+    (await run(`http://user:${secret}@127.0.0.1/mcp`)).output,
+    /URL credentials and fragments are not accepted/,
+  );
+  assert.match(
+    (await run("http://127.0.0.1/mcp", `${secret}\n`)).output,
+    /Set MCP_SERVER_URL/,
+  );
   const listener = createServer();
   await new Promise((resolve) => listener.listen(0, "127.0.0.1", resolve));
   const port = listener.address().port;

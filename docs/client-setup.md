@@ -4,7 +4,7 @@ The plugin starts a Streamable HTTP MCP endpoint inside desktop Obsidian. It doe
 
 ## Release and verification status
 
-The published baseline is plugin [v0.4.0](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.0), bundled with core 4.1.1 and SDK 1.32.1. Its native verification used an isolated Windows Obsidian 1.14.5 renderer, Electron 43.8.3, and Node.js 24.22.0. See the [validation record](role-settings-validation.md) for artifact hashes, tested flows, and limits. Plugin v0.3.0 bundled core 1.4.0 and had different optional-token behavior; do not apply that older description to v0.4.0.
+The published baseline is plugin [v0.4.0](https://github.com/rps321321/obsidian-mcp-pro-plugin/releases/tag/v0.4.0), bundled with core 4.1.1 and SDK 1.32.1. Its native verification used an isolated Windows Obsidian 1.14.5 renderer, Electron 43.8.3, and Node.js 24.22.0. See the [validation record](role-settings-validation.md) for artifact hashes, tested flows, and limits. The older v0.3.0 source declared core `^1.4.0` and allowed an empty bearer setting. These instructions target v0.4.0.
 
 | Client or check           | Evidence and status                                                                                                                                                                          |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ Cursor also documents environment interpolation in headers. That is a client con
 }
 ```
 
-Here `${OBSIDIAN_MCP_TOKEN}` is Claude Code's documented environment-variable syntax. Set it in the environment used to launch that client, and use its documented scope and approval flow. This example has not been run against an installed Claude Code version. Do not paste it into Claude Desktop's settings and assume the same behavior.
+Save the entry in your project's `.mcp.json` and follow Claude Code's project approval flow. Here `${OBSIDIAN_MCP_TOKEN}` is Claude Code's documented environment-variable syntax. Set it in the environment used to launch that client. Do not replace it with a literal token in a shared project file. This example has not been run against an installed Claude Code version. Do not paste it into Claude Desktop's settings and assume the same behavior.
 
 ## Remote and cloud connections
 
