@@ -92,4 +92,22 @@ The plugin now requires `obsidian-mcp-pro: ^4.1.1`. npm metadata and the install
 
 The final dependency tree passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. A live HTTP SDK client accepted 16 counted elements, rejected 17, and completed a subsequent normal call. The clean-built `main.js` SHA-256 remains `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`, identical to the intermediate registry build because this core patch changes dependency metadata rather than bundled application source.
 
-The published core minimum-version correction is adopted. Final browser and native acceptance of this registry dependency unit, and publication of the plugin itself, remain separate gates. The historical candidate record above remains evidence only for its named revision and bundle.
+The published core minimum-version correction is adopted. Final browser and native acceptance of this registry dependency unit is recorded below. Publication of the plugin remains a separate gate. The historical candidate record above remains evidence only for its named revision and bundle.
+
+## Final registry native acceptance — 2026-10-23
+
+Product and harness revision `1f263254b20cd5847409126c7cd1ba27830053c7` was tested with the published core 4.1.1 registry dependency (core revision `36a755c`), SDK 1.32.1 and esbuild 0.25.12. No local dependency paths or overrides were used. The copied fixture files matched the reviewed worktree byte for byte:
+
+- `main.js` SHA-256: `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`
+- `styles.css` SHA-256: `981f4849f80466657ed28e3a009344a957f99d1ea7b772f3dfcf14b4d395d0f9`
+- `manifest.json` SHA-256: `4a88b740d02f11233333604e9724f55f821cd4d7cb9decfe2f22043a559d6f51`
+
+The official Windows Obsidian 1.14.5 renderer ran with Electron 43.8.3 and embedded Node 24.22.0. A test-only bootstrap loaded the unchanged official application archive with an isolated profile and synthetic vault, disabling global protocol, login-item and updater integration. This was an actual Obsidian renderer test, not an installed-app or real-vault qualification.
+
+The native suite passed 141 redacted accessibility snapshots, including Role CRUD, mixed category selection and keyboard controls, draft cancellation, save failures, token lifecycle, and Host validation/restart feedback. Raw MCP requests and external SDK clients verified old-session rejection after UI token reassignment and shared Role permission edits, append-only advertisements after reinitialization, direct retrieval denial, and reinitialization with no Tools. Clipboard writes were intercepted and checked in both renderer realms before every observed copy action; OS clipboard integration was not tested. The disposable browser suite also passed. Full and production npm audits both reported zero advisories.
+
+All six final native PNGs were personally inspected and independently reviewed: light and dark wide layouts, dark narrow Roles and Tags at 200% text size, light narrow tokens at 200%, and dark keyboard focus. At a 640-pixel window width, content measured 364 pixels; primary/Tool text increased from 15 to 30 pixels, descriptions from 12 to 24, and controls from 13 to 26. Mixed-state dashes, wrapped labels and privacy warnings remained visible without horizontal overflow, secrets stayed masked, and the Create Custom Role button showed the host focus ring. These checks revalidated the applicable HIG controls, accessibility, layout, writing, settings and appearance criteria above against the registry-built bundle.
+
+Computed contrast on the sampled default solid host backgrounds measured 15.91:1 for light labels and 6.69:1 for descriptions; dark values were 12.19:1 and 8.13:1. This does not measure every theme, focus-ring contrast or physical viewing condition. macOS VoiceOver remains untested.
+
+Initial synthetic settings were restored, the fixture MCP endpoint stopped, and only the verified owned application was quit. Its process tree and debug listener were gone afterward; no global Obsidian profile was created. Historical candidate evidence was preserved separately. Local final evidence is retained under `ui-runtime/evidence/registry-1f26325` in the maintainer's ignored issue-delivery directory. This docs-only acceptance record does not change the tested bundle or establish plugin publication.

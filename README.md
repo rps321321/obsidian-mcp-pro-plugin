@@ -2,17 +2,17 @@
 
 A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-**0.4.0 preparation. Unreleased.** This branch tracks the published `obsidian-mcp-pro: ^4.1.1` package, including its corrected SDK minimum, with a verified registry lockfile and clean-install build. Publication of this plugin and native acceptance of the current registry-built bundle remain separate release gates.
+Version 0.4.0 requires the published `obsidian-mcp-pro: ^4.1.1` package, including its corrected SDK minimum. The registry lockfile and clean-built bundle have passed browser and isolated native Obsidian acceptance; see the [validation record](docs/role-settings-validation.md). This validation does not establish publication of the plugin.
 
 ## Roles and tokens
 
-Create a separately labeled token for each client and assign a Role. Six predefined Roles provide saved Tool selections: Full Access, Read only, Search only, Write only, Create only, and Append only. Custom Roles can be created, edited, or duplicated. Nine expandable categories show selection counts and mixed checkbox states. A Role assigned to tokens cannot be deleted until those tokens are reassigned or revoked.
+Create a separately labeled token for each client and assign a Role. Six predefined Roles provide saved Tool selections: Full Access, Read only, Search only, Write only, Create-only, and Append-only. Custom Roles can be created, edited, or duplicated. Nine expandable categories show selection counts and mixed checkbox states. A Role assigned to tokens cannot be deleted until those tokens are reassigned or revoked.
 
 Saving a shared Role names the affected tokens before applying the change. Tool edits, token reassignment, regeneration, and revocation close affected sessions; clients must initialize again. Name and label edits preserve sessions. Operations already executing are not rolled back.
 
 Migration preserves an existing bearer token and assigns it to Full Access. An empty legacy bearer generates a random 256-bit token. Migration must save successfully before the endpoint can run. Existing version-2 Role snapshots never acquire newly introduced Tools automatically, including Full Access. Invalid or unsupported settings fail closed.
 
-Tokens are masked until revealed. Copy Token and Copy Config place the secret on your clipboard. Regeneration and revocation require confirmation. Tokens are stored as plaintext in the vault's plugin settings; vault sync and backups may copy them. Masking does not encrypt this storage.
+Tokens are masked until revealed. Copy Token and Copy Connection JSON place the secret on your clipboard. Regeneration and revocation require confirmation. Tokens are stored as plaintext in the vault's plugin settings; vault sync and backups may copy them. Masking does not encrypt this storage.
 
 ## Connection settings
 
@@ -47,7 +47,7 @@ node --experimental-strip-types --test tests/hosts*.test.mjs
 node scripts/test-settings-ui.mjs
 ```
 
-The lockfile resolves core 4.1.1 and SDK 1.32.1 from npm. Earlier packed-core and intermediate 4.1.0 verification are retained as historical evidence in [the validation record](docs/role-settings-validation.md); they do not establish acceptance of the current compiled bundle.
+The lockfile resolves core 4.1.1 and SDK 1.32.1 from npm. The [validation record](docs/role-settings-validation.md) includes final acceptance of the registry-built bundle and retains earlier packed-core and intermediate 4.1.0 verification separately as historical evidence.
 
 The development bundler is pinned to esbuild 0.25.12. The fixed [development-server advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is not reached by this repository's configured `watch()` and `rebuild()` paths, which do not start esbuild's HTTP server. Since esbuild 0.25, a failed watch build removes stale output until a successful rebuild restores it.
 
