@@ -76,6 +76,21 @@ test("connection check gives a fixed Host denial diagnostic", async () => {
   }
 });
 
+test("connection check bounds a stalled initialization request", async () => {
+  const listener = createServer(() => {});
+  await new Promise((resolve) => listener.listen(0, "127.0.0.1", resolve));
+  const started = performance.now();
+  try {
+    const result = await run(`http://127.0.0.1:${listener.address().port}/mcp`);
+    assert.equal(result.code, 1);
+    assert.match(result.output, /Connection check failed/);
+    assert.ok(performance.now() - started < 10000);
+  } finally {
+    listener.closeAllConnections();
+    await new Promise((resolve) => listener.close(resolve));
+  }
+});
+
 test("connection check uses installed core with real auth, discovery, and stats", async () => {
   const vault = await mkdtemp(join(tmpdir(), "mcp-connection-check-"));
   let server;
