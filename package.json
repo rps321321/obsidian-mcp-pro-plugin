@@ -1,6 +1,6 @@
 {
   "name": "obsidian-mcp-pro-plugin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Obsidian plugin that runs an MCP server inside the app, exposing the vault to Claude/Cursor/ChatGPT over HTTP.",
   "main": "main.js",
   "private": true,
@@ -28,5 +28,8 @@
   },
   "dependencies": {
     "obsidian-mcp-pro": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
