@@ -190,14 +190,17 @@ try {
     }),
   );
 } finally {
-  if (initial && main)
-    await main.evaluate(async (settings) => {
-      const plugin = app.plugins.plugins["mcp-pro"];
-      await plugin.manager?.stop();
-      await plugin.updateSettings(() => settings);
-      app.setting.openTabById("mcp-pro");
-    }, initial);
-  await browser.close();
+  try {
+    if (initial && main)
+      await main.evaluate(async (settings) => {
+        const plugin = app.plugins.plugins["mcp-pro"];
+        await plugin.manager?.stop();
+        await plugin.updateSettings(() => settings);
+        app.setting.openTabById("mcp-pro");
+      }, initial);
+  } finally {
+    await browser.close();
+  }
 }
 
 async function runHostChecks(page, main) {
@@ -222,6 +225,10 @@ async function runHostChecks(page, main) {
     .click();
   await main.waitForFunction(
     () => app.plugins.plugins["mcp-pro"].settings.allowedHosts.length === 2,
+  );
+  assert.match(
+    await page.locator(".mcp-settings").textContent(),
+    /Saved\. Stop and start the server to apply host changes\./,
   );
   assert.deepEqual(
     await main.evaluate(
