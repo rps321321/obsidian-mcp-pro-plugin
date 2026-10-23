@@ -1,7 +1,7 @@
 {
   "id": "mcp-pro",
   "name": "MCP Pro",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "minAppVersion": "1.4.0",
   "description": "Run a token-authenticated MCP server for your vault with configurable tool roles.",
   "author": "rps321",
