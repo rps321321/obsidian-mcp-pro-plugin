@@ -2,7 +2,7 @@
 
 A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-**0.4.0 preparation — unreleased.** These Role settings require the core 4.1.0 APIs. Core publication and a verified registry dependency/lockfile upgrade are still pending. The tracked dependency is deliberately unchanged until publication; this branch is not a ready-to-install release.
+**0.4.0 preparation. Unreleased.** These Role settings require the core 4.1.0 APIs. Core publication and a verified registry dependency/lockfile upgrade are still pending. The tracked dependency is deliberately unchanged until publication; this branch is not a ready-to-install release.
 
 ## Roles and tokens
 
@@ -24,7 +24,7 @@ The Host settings draw on the behavior proposed in [PR #14](https://github.com/r
 
 ## Permission boundaries
 
-Roles select Tools; they do not create separate vaults or per-token folder boundaries. Global folder restrictions apply to every client. A read-only Role excludes `index_vault`; indexing can persist data or contact a configured provider. Searches can disclose note contents. Write operations can return affected text. Deletion is permanent, edits can destroy content, and moving a note may rewrite links in other notes. Review individual Tools before granting them.
+Roles select Tools; they do not create separate vaults or per-token folder boundaries. Global folder restrictions apply to every client. A read-only Role excludes `index_vault`; indexing can persist data or contact a configured provider. Searches can disclose note contents. Write operations can return affected text. The `delete_note` Tool includes permanent deletion, edits can destroy content, and moving a note may rewrite links in other notes. Review individual Tools before granting them.
 
 Version-2 settings are unsupported by older plugin versions. Before downgrading, stop the endpoint and restore a matching settings backup together with the older plugin.
 
