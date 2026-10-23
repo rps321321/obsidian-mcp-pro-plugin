@@ -34,3 +34,9 @@ jobs:
 
       - name: Typecheck and production bundle
         run: npm run build
+
+      - name: Bundled authorization and migration tests
+        run: node scripts/test-backend.mjs
+
+      - name: Host validation and HTTP acceptance
+        run: node --experimental-strip-types --test tests/hosts.test.mjs tests/hosts-http.test.mjs
