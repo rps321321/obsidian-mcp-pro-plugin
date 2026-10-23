@@ -100,7 +100,9 @@ try {
 }
 ```
 
-The check lists Tools and calls `get_vault_stats`. It never prints the token, headers, Tool results, or raw SDK errors. Its output reports connection success or a fixed diagnostic category. Use a synthetic vault when testing changes; do not send private note contents to diagnose a connection.
+The check lists Tools and calls `get_vault_stats`. It never prints the token, headers, Tool results, or raw SDK errors. Its output reports connection success or a fixed diagnostic category. Requests time out after five seconds, and the command has a twenty-second overall limit. Use a synthetic vault when testing changes; do not send private note contents to diagnose a connection.
+
+To run the source regression tests, first run `npm run build`, then `node scripts/test-runtime.mjs` and `node --test scripts/test-connection-check.mjs`. These use temporary synthetic vaults and real SDK connections against the production `main.js`, with a minimal Obsidian host API replacement. They do not drive a desktop client application or a real user's vault. The runtime tests also check PDF/DOCX resource bytes; those checks do not establish application rendering or extraction.
 
 ## Troubleshooting
 

@@ -56,6 +56,7 @@ Use Node.js 24 or newer. Install the locked registry dependencies with `npm ci`,
 npm run build
 node scripts/test-backend.mjs
 node scripts/test-runtime.mjs
+node --test scripts/test-connection-check.mjs
 node --experimental-strip-types --test tests/hosts*.test.mjs
 node scripts/test-settings-ui.mjs
 ```

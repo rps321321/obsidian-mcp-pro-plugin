@@ -1,17 +1,10 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { createServer } from "node:http";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { createServer, request } from "node:http";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import {
-  buildMcpServer,
-  createMcpServerServices,
-  startHttpServer,
-} from "obsidian-mcp-pro";
+import { artifact, runtimeFixture } from "../tests/runtime-harness.mjs";
 
 const secret = randomBytes(32).toString("hex");
 const script = new URL("check-connection.mjs", import.meta.url);
@@ -35,7 +28,7 @@ async function run(url, token = secret) {
   });
   assert.ok(!output.includes(secret), "must not print the bearer secret");
   assert.ok(
-    !output.includes("private fixture text"),
+    !output.includes("runtime fixture note"),
     "must not print vault text",
   );
   assert.ok(!output.includes(" at "), "must not print an error stack");
@@ -91,44 +84,76 @@ test("connection check bounds a stalled initialization request", async () => {
   }
 });
 
-test("connection check uses installed core with real auth, discovery, and stats", async () => {
-  const vault = await mkdtemp(join(tmpdir(), "mcp-connection-check-"));
-  let server;
-  try {
-    await writeFile(join(vault, "fixture.md"), "private fixture text");
-    const services = createMcpServerServices(vault);
-    const authorization = {
-      roles: [{ id: "reader", name: "Reader", tools: ["get_vault_stats"] }],
-      tokens: [{ id: "test", token: secret, roleId: "reader" }],
-    };
-    server = await startHttpServer({
+test("connection check uses the production bundle with real auth, discovery, and stats", async () => {
+  const fixture = await runtimeFixture({
+    saved: {
+      schemaVersion: 2,
       host: "127.0.0.1",
       port: 0,
-      ...authorization,
-      buildMcpServer: (options) => buildMcpServer(vault, services, options),
-      installSignalHandlers: false,
-    });
-    const good = await run(server.url);
+      vaultName: "",
+      autoStart: false,
+      allowedHosts: [],
+      roles: [{ id: "reader", name: "Reader", tools: ["get_vault_stats"] }],
+      tokens: [
+        { id: "test", label: "Checker", token: secret, roleId: "reader" },
+      ],
+    },
+  });
+  let proxy;
+  try {
+    await fixture.manager.start();
+    const url = fixture.manager.getState().url;
+    const good = await run(url);
     assert.equal(good.code, 0);
     assert.equal(
       good.output.trim(),
       "Connected, listed permitted Tools, and read vault statistics.",
     );
-    const bad = await run(server.url, `${secret}wrong`);
+    const bad = await run(url, `${secret}wrong`);
     assert.equal(bad.code, 1);
     assert.match(bad.output, /HTTP 401/);
-    const missing = await run(server.url, "");
+    const missing = await run(url, "");
     assert.equal(missing.code, 1);
     assert.match(missing.output, /Set MCP_SERVER_URL/);
-    await server.updateAuthorization({
-      ...authorization,
-      roles: [{ id: "reader", name: "Empty", tools: [] }],
+    proxy = createServer((incoming, outgoing) => {
+      const upstream = request(
+        url,
+        {
+          method: incoming.method,
+          headers: { ...incoming.headers, host: "blocked.invalid" },
+        },
+        (response) => {
+          outgoing.writeHead(response.statusCode, response.headers);
+          response.pipe(outgoing);
+        },
+      );
+      upstream.on("error", () => outgoing.destroy());
+      incoming.pipe(upstream);
     });
-    const denied = await run(server.url);
+    await new Promise((resolve) => proxy.listen(0, "127.0.0.1", resolve));
+    const hostDenied = await run(
+      `http://127.0.0.1:${proxy.address().port}/mcp`,
+    );
+    assert.equal(hostDenied.code, 1);
+    assert.match(hostDenied.output, /HTTP 403.*Host and port/);
+    await fixture.manager.updateSettings(
+      (current) => ({
+        ...current,
+        roles: [{ ...current.roles[0], tools: [] }],
+      }),
+      async (next) => {
+        fixture.plugin.settings = next;
+      },
+    );
+    const denied = await run(url);
     assert.equal(denied.code, 1);
     assert.match(denied.output, /get_vault_stats is not advertised/);
+    console.log(JSON.stringify({ productionArtifact: artifact }));
   } finally {
-    await server?.stop();
-    await rm(vault, { recursive: true, force: true });
+    try {
+      if (proxy) await new Promise((resolve) => proxy.close(resolve));
+    } finally {
+      await fixture.cleanup();
+    }
   }
 });

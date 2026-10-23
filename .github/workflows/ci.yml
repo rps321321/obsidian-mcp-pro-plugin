@@ -41,5 +41,8 @@ jobs:
       - name: Production main.js MCP acceptance
         run: node scripts/test-runtime.mjs
 
+      - name: Development connection checker acceptance
+        run: node --test scripts/test-connection-check.mjs
+
       - name: Host validation and HTTP acceptance
         run: node --experimental-strip-types --test tests/hosts.test.mjs tests/hosts-http.test.mjs
