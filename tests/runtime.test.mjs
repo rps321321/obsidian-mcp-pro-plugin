@@ -101,13 +101,14 @@ test("should refuse empty bearer credentials before listening and never disable 
 
 test("should report bind collisions, release the port, reject old sessions and restart", async () => {
   const holder = createServer();
-  await new Promise((resolve, reject) => {
-    holder.once("error", reject);
-    holder.listen(0, "127.0.0.1", resolve);
-  });
-  const port = holder.address().port;
-  const fixture = await runtimeFixture({ port });
+  let fixture;
   try {
+    await new Promise((resolve, reject) => {
+      holder.once("error", reject);
+      holder.listen(0, "127.0.0.1", resolve);
+    });
+    const port = holder.address().port;
+    fixture = await runtimeFixture({ port });
     await assert.rejects(fixture.manager.start(), /could not be started/);
     assert.equal(fixture.manager.getState().status, "error");
     await new Promise((resolve, reject) =>
@@ -142,7 +143,7 @@ test("should report bind collisions, release the port, reject old sessions and r
     assert.equal((await restarted.client.listTools()).tools.length, 2);
   } finally {
     if (holder.listening) await new Promise((resolve) => holder.close(resolve));
-    await fixture.cleanup();
+    await fixture?.cleanup();
   }
 });
 

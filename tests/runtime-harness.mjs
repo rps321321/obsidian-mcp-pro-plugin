@@ -1,7 +1,7 @@
 import { readFile, mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { createRequire, Module } from "node:module";
 import { runInThisContext } from "node:vm";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -186,7 +186,15 @@ export async function runtimeFixture({ port = 0, saved } = {}) {
     dirname(bundlePath),
   );
   const plugin = new module.exports.default();
-  const vault = await mkdtemp(join(tmpdir(), "plugin-artifact-runtime-"));
+  const temporaryRoot = resolve(tmpdir());
+  const vault = resolve(
+    await mkdtemp(join(temporaryRoot, "plugin-artifact-runtime-")),
+  );
+  if (
+    dirname(vault) !== temporaryRoot ||
+    !basename(vault).startsWith("plugin-artifact-runtime-")
+  )
+    throw new Error("Refusing an unowned runtime vault path");
   const clients = [];
   let tab;
   const settings = saved ?? {
