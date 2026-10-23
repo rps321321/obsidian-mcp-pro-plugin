@@ -56,3 +56,20 @@ The official Windows Obsidian 1.14.5 renderer was exercised with Node 24.22.0 an
 The native live-session check uses both raw MCP requests and an external SDK client. A UI role reassignment invalidates an existing session; reinitialization advertises only the new tools. A subsequent UI role edit invalidates that session and reinitializes with an empty tool list. Omitted tool calls are rejected.
 
 Native evidence must name the source revision, core tarball identity, compiled bundle hash, app/runtime version, and isolation setup. Windows Obsidian verification does not establish macOS VoiceOver behavior, every third-party theme, OS clipboard integration, or physical display/lighting contrast. Those remain explicit acceptance limits.
+
+## Final acceptance record — 2026-10-23
+
+Product and harness revision: `ee5b0f7a8f2caa516de7472c971c3a5cdd9e7ac0` (UI implementation `dd3ab67`). The core candidate has the same tree as merged core revision `53890c3c2ed026864cfaafe6f632db8b2412a8dd`; its tarball SHA-256 is `ba7707923e3fdd52bf68d7c3a5acfd624a9689bf189c24425932115eb2589d45`. It was installed temporarily without saving a local-path dependency or changing the lockfile. This is candidate verification, not proof that the required core version has been published to npm.
+
+Compiled artifact SHA-256 values:
+
+- `main.js`: `4e151516c70703aaf4d64b0644a611e74502c66c23ecd5bac9727f252a7440b5`
+- `styles.css`: `981f4849f80466657ed28e3a009344a957f99d1ea7b772f3dfcf14b4d395d0f9`
+
+The exact revision passed the TypeScript/production build, 15 backend tests, 46 host tests, the disposable browser interaction checks, and the official Obsidian native suite with 141 redacted accessibility snapshots. The final native run intercepted clipboard writes in both renderer realms before every observed action. Raw MCP requests and external SDK clients both verified old-session rejection, new append-only tool advertisements, direct retrieval denial, and reinitialization with no tools after a UI role edit. Initial synthetic settings were restored and the fixture MCP endpoint stopped afterward.
+
+Final PNGs were inspected in the actual Windows Obsidian 1.14.5 renderer. Light and dark wide layouts retained readable labels and visible mixed-state dashes. A 640-pixel settings window provided 364 pixels of content width; enlarged primary/tool text measured 30 pixels from a 15-pixel baseline, descriptions 24 from 12, and control text 26 from 13. Category labels, tool names, token controls and privacy warnings wrapped without horizontal overflow. Token values remained masked. A keyboard-focused Create Custom Role button displayed Obsidian’s visible native focus ring.
+
+Computed foreground/background text contrast on the tested solid host backgrounds was 15.91:1 for light-mode labels and 6.69:1 for descriptions; dark-mode values were 12.19:1 and 8.13:1. These measurements cover those text samples and default host colors, not every theme, focus-ring contrast, physical display condition or assistive technology. macOS VoiceOver and OS clipboard integration were not tested.
+
+The actual candidate dependency tree passed production audit with zero advisories (`npm audit --omit=dev --package-lock=false`). The complete installed tree retained the existing moderate development-only esbuild 0.24.2 advisory, [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). The deliberately unchanged registry lockfile still represents the older published dependency; a clean-install build remains a release gate until the required core package is published and the registry dependency is upgraded and verified.
