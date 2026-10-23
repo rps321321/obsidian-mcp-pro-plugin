@@ -57,7 +57,7 @@ The native live-session check uses both raw MCP requests and an external SDK cli
 
 Native evidence must name the source revision, core tarball identity, compiled bundle hash, app/runtime version, and isolation setup. Windows Obsidian verification does not establish macOS VoiceOver behavior, every third-party theme, OS clipboard integration, or physical display/lighting contrast. Those remain explicit acceptance limits.
 
-## Final acceptance record — 2026-10-23
+## Historical candidate acceptance record — 2026-10-23
 
 Product and harness revision: `ee5b0f7a8f2caa516de7472c971c3a5cdd9e7ac0` (UI implementation `dd3ab67`). The core candidate has the same tree as merged core revision `53890c3c2ed026864cfaafe6f632db8b2412a8dd`; its tarball SHA-256 is `ba7707923e3fdd52bf68d7c3a5acfd624a9689bf189c24425932115eb2589d45`. It was installed temporarily without saving a local-path dependency or changing the lockfile. This is candidate verification, not proof that the required core version has been published to npm.
 
@@ -72,4 +72,16 @@ Final PNGs were inspected in the actual Windows Obsidian 1.14.5 renderer. Light 
 
 Computed foreground/background text contrast on the tested solid host backgrounds was 15.91:1 for light-mode labels and 6.69:1 for descriptions; dark-mode values were 12.19:1 and 8.13:1. These measurements cover those text samples and default host colors, not every theme, focus-ring contrast, physical display condition or assistive technology. macOS VoiceOver and OS clipboard integration were not tested.
 
-The actual candidate dependency tree passed production audit with zero advisories (`npm audit --omit=dev --package-lock=false`). The complete installed tree retained the existing moderate development-only esbuild 0.24.2 advisory, [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). The deliberately unchanged registry lockfile still represents the older published dependency; a clean-install build remains a release gate until the required core package is published and the registry dependency is upgraded and verified.
+The actual candidate dependency tree passed production audit with zero advisories (`npm audit --omit=dev --package-lock=false`). At that revision, the complete installed tree retained the moderate development-only esbuild 0.24.2 advisory, [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99). The deliberately unchanged registry lockfile still represented the older published dependency; a clean registry install and build were outstanding release gates.
+
+## Registry dependency verification — 2026-10-23
+
+After npm exposed core 4.1.0, the dependency was updated to `^4.1.0` and esbuild was pinned to `0.25.12`. The lockfile uses the real npm registry tarball, with integrity `sha512-ProBbY5KhfILO0c19Vf2wf/aIQSliisdEBIcDE9VWl3IwdDYss8Q/wMUsPgVZgGvUlFhkisVoJ9w7IWktHb6aA==` and registry shasum `579a7066837c68f6702c428d4b30c03dd213b796`. No local tarball paths or dependency overrides are used.
+
+A first lockfile update retained SDK 1.29.0 within core's declared range. That older SDK does not enforce the configured input budget. Compatible audit remediation refreshed the lockfile to SDK 1.32.1 and the other patched dependencies, without `--force`. The resulting tree also resolves Obsidian development types 1.14.4 and moment 2.31.0 within the existing declared range.
+
+The resulting lockfile passed `npm ci`, the TypeScript/production build, 15 backend tests, 46 Host tests, and `npm audit --audit-level=moderate` with zero advisories. The new `main.js` SHA-256 is `fdbfaacf5148ad6b5090bd4a7259e73db57882157e60c0ef6af0de1a14440af3`. Browser and native acceptance must be repeated against this bundle; the historical snapshots and bundle hash above are not acceptance of the dependency update.
+
+A live HTTP SDK client against this installed registry tree verified acceptance at 16 counted elements, rejection at 17, and a successful subsequent call. This lockfile proves the corrected dependency combination for this plugin only. Core 4.1.0 still permits older SDK versions through its declared range; the core minimum-version correction and adoption of that published package remain required before final plugin release selection.
+
+The esbuild advisory concerns its HTTP `serve()` feature, which the configured development watch and production rebuild do not invoke. [esbuild 0.25.0](https://github.com/evanw/esbuild/releases/tag/v0.25.0) fixed that advisory and changed failed watch builds to delete stale output until a successful rebuild. The exact 0.25.12 pin keeps this update within that patched minor line.

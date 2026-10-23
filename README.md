@@ -2,7 +2,8 @@
 
 A desktop Obsidian plugin that serves your vault to MCP clients over HTTP.
 
-**0.4.0 preparation. Unreleased.** These Role settings require the core 4.1.0 APIs. Core publication and a verified registry dependency/lockfile upgrade are still pending. The tracked dependency is deliberately unchanged until publication; this branch is not a ready-to-install release.
+**0.4.0 preparation. Unreleased.** Core 4.1.0 is published on npm, and this branch now tracks `obsidian-mcp-pro: ^4.1.0` with a verified registry lockfile and clean-install build. Publication of this plugin and native acceptance of the current registry-built bundle remain separate release gates.
+This is an intermediate dependency update. A core follow-up must raise the SDK minimum so consumers retaining older lockfiles also enforce the tool input budget; the plugin must adopt that published correction before release.
 
 ## Roles and tokens
 
@@ -34,11 +35,11 @@ The plugin requires an Obsidian installer with embedded Node.js 24 or newer. An 
 
 Native acceptance uses the official Obsidian 1.14.5 renderer with Node.js 24.22.0 and Electron 43.8.3, inside an isolated test bootstrap and synthetic vault. See [the validation record](docs/role-settings-validation.md) for coverage and limitations.
 
-For a published release, copy `main.js`, `manifest.json`, and `styles.css` together into `<vault>/.obsidian/plugins/mcp-pro/`, then enable it in Community plugins. Source version metadata does not establish publication. This preparation branch still has the dependency gate described above.
+For a published release, copy `main.js`, `manifest.json`, and `styles.css` together into `<vault>/.obsidian/plugins/mcp-pro/`, then enable it in Community plugins. Source version metadata does not establish publication of this plugin.
 
 ## Development
 
-Use Node.js 24 or newer. After the registry dependency upgrade, install with `npm ci`, then run:
+Use Node.js 24 or newer. Install the locked registry dependencies with `npm ci`, then run:
 
 ```sh
 npm run build
@@ -47,7 +48,9 @@ node --experimental-strip-types --test tests/hosts*.test.mjs
 node scripts/test-settings-ui.mjs
 ```
 
-Candidate verification currently installs a verified packed core artifact with `--no-save --package-lock=false`. That local installation is not a clean registry installation or a release; do not commit local tarball paths.
+The lockfile resolves core 4.1.0 and SDK 1.32.1 from npm. Earlier packed-core verification is retained as historical evidence in [the validation record](docs/role-settings-validation.md); it does not establish acceptance of the current compiled bundle.
+
+The development bundler is pinned to esbuild 0.25.12. The fixed [development-server advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is not reached by this repository's configured `watch()` and `rebuild()` paths, which do not start esbuild's HTTP server. Since esbuild 0.25, a failed watch build removes stale output until a successful rebuild restores it.
 
 The plugin creates a fresh MCP server for each HTTP session and shares vault services through its manager. Settings changes are serialized with start and stop, saved before live authorization updates, and validated as immutable snapshots. See [authorization settings](docs/authorization-settings.md).
 
